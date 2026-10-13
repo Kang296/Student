@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>嵌入式系统设计 · 教学教案</title>
+<style>
+  :root { --ink:#1f2330; --muted:#6b7280; --line:#e2e6f0; --accent:#1f6feb; --bg:#f7f8fc; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+         font-size:15px; line-height:1.85; }
+  header { position:sticky; top:0; z-index:30; background:rgba(255,255,255,.95); backdrop-filter:blur(8px);
+           border-bottom:1px solid var(--line); padding:12px 26px; display:flex; align-items:center; gap:14px; }
+  header b { font-size:16px; }
+  header small { color:var(--muted); font-size:12.5px; }
+  header .sp { margin-left:auto; display:flex; gap:8px; }
+  button { font:inherit; font-size:13px; border:1px solid var(--line); background:#fff; color:var(--ink);
+           border-radius:9px; padding:7px 13px; cursor:pointer; }
+  button:hover { background:#eef2ff; border-color:#c7d2fe; }
+  .wrap { display:flex; align-items:flex-start; gap:28px; max-width:1280px; margin:0 auto; padding:26px 26px 90px; }
+  nav { position:sticky; top:78px; flex:0 0 268px; max-height:calc(100vh - 110px); overflow:auto;
+        background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 12px;
+        box-shadow:0 1px 3px rgba(20,30,60,.05); }
+  nav h3 { margin:2px 6px 10px; font-size:12.5px; color:var(--muted); letter-spacing:1px; font-weight:600; }
+  nav a { display:block; text-decoration:none; color:#3c4356; font-size:13px; padding:5px 9px;
+          border-radius:8px; border-left:3px solid transparent; }
+  nav a:hover { background:#f1f4ff; color:var(--accent); }
+  nav a.l3 { padding-left:24px; font-size:12.5px; color:#5c6478; }
+  nav details { margin:2px 0; }
+  nav summary { cursor:pointer; font-size:13px; font-weight:600; padding:5px 8px; border-radius:8px;
+                color:#2a3145; list-style:none; }
+  nav summary::-webkit-details-marker { display:none; }
+  nav summary::before { content:"\25B8"; display:inline-block; width:14px; color:#9aa3b8;
+                        transition:.15s; }
+  nav details[open] > summary::before { transform:rotate(90deg); }
+  nav summary:hover { background:#f1f4ff; color:var(--accent); }
+  nav a.l2.solo { font-weight:600; }
+  .navtools { display:flex; gap:6px; margin:0 4px 10px; }
+  .navtools button { flex:1; padding:5px 8px; font-size:12px; }
+  article { flex:1 1 auto; min-width:0; background:#fff; border:1px solid var(--line); border-radius:16px;
+            padding:34px 40px 60px; box-shadow:0 2px 10px rgba(20,30,60,.05); }
+  article h1 { font-size:26px; margin:0 0 6px; padding-bottom:14px; border-bottom:3px solid var(--accent); }
+  article h2 { font-size:21px; margin:44px 0 14px; padding:8px 0 8px 14px; border-left:6px solid var(--accent);
+               background:linear-gradient(90deg,rgba(0,0,0,.035),transparent); border-radius:0 8px 8px 0; }
+  article h1, article h2, article h3 { scroll-margin-top:80px; }
+  article h3 { font-size:17px; margin:26px 0 10px; color:#2a3145; }
+  article p { margin:10px 0; }
+  article strong { color:#111827; }
+  article code { background:#f2f4fa; border:1px solid #e6e9f2; border-radius:5px; padding:1px 5px;
+                 font-family:"Cascadia Mono",Consolas,"Courier New",monospace; font-size:13px; color:#b5305f; }
+  pre { background:#22262f; color:#e6e9f2; border-radius:12px; padding:18px 20px; overflow:auto; line-height:1.6; }
+  pre code { background:none; border:none; color:inherit; padding:0; font-size:13px; }
+  blockquote { margin:16px 0; padding:12px 18px; background:#f4f7ff; border-left:5px solid var(--accent);
+               border-radius:0 10px 10px 0; color:#3d4763; }
+  blockquote p { margin:0; }
+  hr { border:none; border-top:1px dashed var(--line); margin:34px 0; }
+  ul { margin:10px 0; padding-left:0; list-style:none; }
+  li { position:relative; padding:4px 0 4px 20px; }
+  li::before { content:""; position:absolute; left:4px; top:14px; width:6px; height:6px; border-radius:50%;
+               background:var(--accent); opacity:.55; }
+  ol { margin:10px 0; padding-left:34px; }
+  ol li { list-style:decimal; padding:4px 0; }
+  ol li::before { content:none; }
+  .tw { overflow-x:auto; margin:16px 0; border-radius:12px; border:1px solid var(--line); }
+  table { border-collapse:collapse; width:100%; min-width:520px; font-size:14px; }
+  th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:9px 12px;
+           text-align:left; vertical-align:top; }
+  th { background:#f2f5fd; font-weight:600; white-space:nowrap; }
+  tr:last-child td { border-bottom:none; }
+  th:last-child, td:last-child { border-right:none; }
+  tbody tr:hover { background:#fafbff; }
+  #tipbar { display:none; margin:0 0 18px; padding:10px 14px; border-radius:10px; font-size:13px;
+            background:#fff8dc; border:1px solid #f0c419; color:#6b5300; }
+  body.editing #tipbar { display:block; }
+  body.editing #doc { outline:2px dashed #f0c419; outline-offset:16px; border-radius:8px; }
+  body.editing #doc :is(h1,h2,h3,h4):hover,
+  body.editing #doc :is(p,li,td,th):hover { background:#fffbe6; }
+  #doc[contenteditable="true"] { cursor:text; }
+  .banner { max-width:1280px; margin:16px auto -8px; padding:12px 18px; border-radius:12px;
+            font-size:13.5px; line-height:1.7; border:1px solid #d7ddea; background:#f3f6ff; color:#2a3145; }
+  .banner.warn { background:#fff8dc; border-color:#f0c419; color:#6b5300; }
+  .banner button { margin-left:8px; padding:5px 12px; font-size:12.5px; }
+  .banner button.primary { background:#1f6feb; border-color:#1f6feb; color:#fff; }
+  .pagenav { display:flex; gap:6px; flex-wrap:wrap; }
+  .pagenav a { font-size:12.5px; text-decoration:none; color:#3c4356; border:1px solid var(--line);
+               background:#fff; border-radius:9px; padding:6px 11px; }
+  .pagenav a:hover { background:#eef2ff; border-color:#c7d2fe; color:var(--accent); }
+  .pagenav a.cur { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .flash { position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:99;
+           background:#1f2330; color:#fff; padding:10px 18px; border-radius:10px; font-size:13px;
+           box-shadow:0 6px 20px rgba(0,0,0,.25); }
+  #doc a { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(31,111,235,.35); }
+  #doc a:hover { border-bottom-color:var(--accent); }
+  nav a.l4 { padding-left:40px; font-size:11.5px; color:#6b7385; }
+  .fig { margin:18px 0; text-align:center; }
+  .fig img { max-width:100%; height:auto; border:1px solid var(--line); border-radius:10px;
+             background:#fff; }
+  .fig figcaption { margin-top:8px; font-size:13px; color:var(--muted); }
+  #doc pre { position:relative; }
+  .copybtn { position:absolute; top:8px; right:8px; z-index:5; padding:3px 10px; font-size:12px;
+             border-radius:7px; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14);
+             color:#e6e9f2; cursor:pointer; opacity:0; transition:.15s; user-select:none;
+             font-family:inherit; line-height:1.4; }
+  #doc pre:hover .copybtn { opacity:1; }
+  .copybtn:hover { background:rgba(255,255,255,.28); }
+  .copybtn.ok { background:#2e7d32; border-color:#2e7d32; color:#fff; opacity:1; }
+  @media (max-width:900px) { .copybtn { opacity:1; } }
+  @media (max-width:900px) {
+    .wrap { flex-direction:column; padding:16px; }
+    nav { position:static; flex:none; width:100%; max-height:none; }
+    article { padding:22px 18px 40px; }
+  }
+  @media print {
+    body { background:#fff; font-size:11.5pt; }
+    header, nav, .noprint { display:none !important; }
+    .wrap { display:block; max-width:none; padding:0; }
+    article { border:none; box-shadow:none; border-radius:0; padding:0; }
+    article h1 { font-size:20pt; }
+    article h2 { font-size:15pt; margin-top:0; page-break-before:always; page-break-after:avoid; }
+    article h1 + blockquote + hr + h2, article h2:first-of-type { page-break-before:avoid; }
+    article h3 { font-size:12.5pt; page-break-after:avoid; }
+    table, pre, blockquote, li { page-break-inside:avoid; }
+    th { background:#eee; }
+    pre { background:#f4f4f6; color:#111; border:1px solid #ccc; }
+    @page { margin:14mm 12mm; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <b>嵌入式系统设计 · 教学教案</b><small>分册索引 · 共 7 册</small>
+<div class="pagenav"><a href="00-索引.html">索引</a><a href="01-课程与基础准备.html">01 基础</a><a href="02-外设与通信.html">02 外设</a><a href="03-无线与系统.html">03 无线</a><a href="04-小车开发板实验.html">04 小车</a><a href="05-无人机开发板实验.html">05 无人机</a><a href="06-综合项目与迁移.html">06 综合</a><a href="07-附录.html">07 附录</a></div>
+  <span class="sp">
+    <button id="btnEdit" onclick="toggleEdit()">编辑内容</button>
+    <button id="btnSave" onclick="saveLocal()" hidden>保存修改</button>
+    <button id="btnHtml" onclick="exportHTML()">导出 HTML</button>
+    <button id="btnMd" onclick="exportMD()">导出 Markdown</button>
+    <button id="btnReset" onclick="resetDoc()" hidden>恢复原始</button>
+    <button onclick="window.print()">打印 / PDF</button>
+  </span>
+</header>
+<div id="banner" class="banner" style="display:none"></div>
+<div class="wrap">
+  <nav>
+    <h3>目 录</h3>
+    <div class="navtools noprint">
+      <button onclick="document.querySelectorAll('nav details').forEach(d=>d.open=true)">全部展开</button>
+      <button onclick="document.querySelectorAll('nav details').forEach(d=>d.open=false)">全部折叠</button>
+    </div>
+    <a class='l2 solo' href='#分册目录'>分册目录</a>
+<a class='l2 solo' href='#使用说明'>使用说明</a>
+  </nav>
+  <article id="doc"><h1>嵌入式系统设计 · 教学教案（分册索引）</h1>
+<blockquote><p>全教案按教学阶段拆成 7 册，每册可独立打开、独立编辑。</p></blockquote>
+<h2 id='分册目录'>分册目录</h2>
+<div class='tw'><table><thead><tr><th>分册</th><th>内容</th><th>小节数</th><th>大小</th></tr></thead><tbody><tr><td><a href="01-课程与基础准备.html">01 课程与基础准备</a></td><td>教学目标 · 学时分配 · 元器件 · 电路识图 · 调试方法 · 仿真</td><td>15</td><td>67 KB</td></tr><tr><td><a href="02-外设与通信.html">02 外设与通信</a></td><td>GPIO · 定时器与PWM · ADC · UART · 单总线 · I2C · SPI · 显示 · 执行器 · 中断 · 看门狗</td><td>11</td><td>111 KB</td></tr><tr><td><a href="03-无线与系统.html">03 无线与系统</a></td><td>WiFi · BLE · MQTT与网关 · FreeRTOS · NVS</td><td>5</td><td>174 KB</td></tr><tr><td><a href="04-小车开发板实验.html">04 小车开发板实验</a></td><td>10 个实验：LED · 定时器 · UART · 光敏 · 电机 · WiFi · 蓝牙 · DHT11 · 摄像头</td><td>10</td><td>88 KB</td></tr><tr><td><a href="05-无人机开发板实验.html">05 无人机开发板实验</a></td><td>8 个实验：WiFi · 惯导 · 光流 · 摄像头 · 气压计 · 激光测距 · 姿态解算</td><td>8</td><td>122 KB</td></tr><tr><td><a href="06-综合项目与迁移.html">06 综合项目与迁移</a></td><td>综合项目与考核 · 实验安全规范 · 衔接 STM32</td><td>17</td><td>36 KB</td></tr><tr><td><a href="07-附录.html">07 附录</a></td><td>引脚表 · 故障排查 · API 速查 · 元器件速查 · 基本功清单 · 现象对照</td><td>2</td><td>36 KB</td></tr></tbody></table></div>
+<h2 id='使用说明'>使用说明</h2>
+<ul><li><strong>看内容</strong>：点任意一册，册内顶部有分册导航，可互相跳转。</li><li><strong>复制代码</strong>：每段代码右上角有「复制」按钮，点一下即可复制到剪贴板。</li><li><strong>改内容</strong>：点右上角「编辑内容」，改完点「保存修改」（存在浏览器里）或「导出 HTML」（下载新文件）。</li><li><strong>打印</strong>：任意一册点「打印 / PDF」即可导出打印版。</li></ul></article>
+</div>
+
+<div id="tipbar">
+  <b>编辑模式已打开。</b>直接点文字就能改、删、加。<br/>
+  改完请点上方 <b>「保存修改」</b>（存在这个浏览器里，下次打开还在），
+  或点 <b>「导出 HTML」</b> 下载成一个新文件，用它替换原来的文件即可。<br/>
+  想变回去就点 <b>「恢复原始」</b>。
+</div>
+<script>
+var DOC = document.getElementById('doc');
+var NAV = document.querySelector('nav');
+var BASENAME = decodeURIComponent(location.pathname.split('/').pop() || 'document').replace(/\.html?$/i, '') || 'document';
+var KEY = 'docedit::' + BASENAME;
+var DOC_SIG = '9706b036ebef';   /* 构建签名：文件一变，签名就变 */
+
+function flash(msg) {
+  var old = document.querySelector('.flash');
+  if (old) old.remove();
+  var d = document.createElement('div');
+  d.className = 'flash';
+  d.textContent = msg;
+  document.body.appendChild(d);
+  setTimeout(function () { d.remove(); }, 2600);
+}
+
+/* ---------- 编辑模式 ---------- */
+function toggleEdit() {
+  var on = document.body.classList.toggle('editing');
+  DOC.setAttribute('contenteditable', on ? 'true' : 'false');
+  document.getElementById('btnEdit').textContent = on ? '退出编辑' : '编辑内容';
+  document.getElementById('btnSave').hidden = !on;
+  document.getElementById('btnReset').hidden = !localStorage.getItem(KEY);
+  if (on) { flash('编辑模式已打开，改完记得保存或导出'); }
+}
+
+/* ---------- 保存到浏览器（只存浏览器，不改磁盘文件） ---------- */
+function saveLocal() {
+  try {
+    rebuildTOC();
+    var rec = { sig: DOC_SIG, time: new Date().toLocaleString(), html: DOC.innerHTML };
+    localStorage.setItem(KEY, JSON.stringify(rec));
+    showBanner('已保存到浏览器（' + rec.time + '）。<b>注意：这不会改动磁盘上的文件</b>，'
+      + '要发给别人或换电脑，请点「导出 HTML」下载文件。', 'info');
+  } catch (e) {
+    showBanner('这个浏览器不允许自动保存，请用「导出 HTML」把内容保存成文件。', 'warn');
+  }
+}
+
+function resetDoc() {
+  if (!confirm('确定丢弃浏览器里的修改，恢复成文件当前的内容吗？')) return;
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  location.reload();
+}
+
+/* ---------- 启动检查：不再自动覆盖文件内容 ---------- */
+function showBanner(html, kind) {
+  var el = document.getElementById('banner');
+  el.className = 'banner ' + (kind || 'info');
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+function hideBanner() {
+  document.getElementById('banner').style.display = 'none';
+}
+
+function loadSaved() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    var rec = JSON.parse(raw);
+    if (!rec || !rec.html) { localStorage.removeItem(KEY); return; }
+
+    if (rec.sig === DOC_SIG) {
+      showBanner('检测到你在浏览器里保存过的修改（' + rec.time + '）。'
+        + '<button class="primary" onclick="applySaved()">恢复修改</button>'
+        + '<button onclick="dropSaved()">丢弃</button>');
+    } else {
+      showBanner('<b>这个文件已经更新过了。</b>你浏览器里保存的修改是基于旧版本的（' + rec.time
+        + '），直接恢复会看不到新加的内容。'
+        + '<button class="primary" onclick="dropSaved()">丢弃旧修改（推荐）</button>'
+        + '<button onclick="applySaved()">仍要恢复旧修改</button>', 'warn');
+    }
+  } catch (e) {
+    try { localStorage.removeItem(KEY); } catch (e2) {}
+  }
+}
+
+function applySaved() {
+  try {
+    var rec = JSON.parse(localStorage.getItem(KEY));
+    if (rec && rec.html) { DOC.innerHTML = rec.html; rebuildTOC(); bindCopyButtons(); flash('已恢复浏览器里的修改'); }
+  } catch (e) {}
+  hideBanner();
+}
+
+function dropSaved() {
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  hideBanner();
+  flash('已丢弃浏览器副本，当前显示的是文件里的最新内容');
+}
+
+/* ---------- 重建左侧目录 ---------- */
+function rebuildTOC() {
+  if (!NAV) return;
+  var heads = DOC.querySelectorAll('h2, h3');
+  var html = '', cur = null, n = 0;
+  for (var i = 0; i < heads.length; i++) {
+    var h = heads[i];
+    n = n + 1;
+    if (!h.id) h.id = 'e' + n;
+    var txt = h.textContent.trim();
+    var safe = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (h.tagName === 'H2' || cur === null) {
+      if (cur) html += cur.kids.length ? '</details>' : '</a>';
+      cur = { id: h.id, kids: [] };
+      html += cur.kids ? '' : '';
+      html += (h.tagName === 'H2')
+        ? '<details open><summary>' + safe + '</summary>'
+        : '<a class="l2 solo" href="#' + h.id + '">' + safe + '</a>';
+    } else {
+      html += '<a class="l3" href="#' + h.id + '">' + safe + '</a>';
+      cur.kids.push(1);
+    }
+  }
+  if (cur && cur.kids.length) html += '</details>';
+  var head = NAV.querySelector('h3');
+  var tools = NAV.querySelector('.navtools');
+  NAV.innerHTML = '';
+  if (head) NAV.appendChild(head);
+  if (tools) NAV.appendChild(tools);
+  NAV.insertAdjacentHTML('beforeend', html);
+}
+
+/* ---------- 导出 HTML ---------- */
+function exportHTML() {
+  rebuildTOC();
+  var clone = document.documentElement.cloneNode(true);
+  var c = clone.querySelector('#doc');
+  c.innerHTML = DOC.innerHTML;
+  c.removeAttribute('contenteditable');
+  var cb = clone.querySelector('body');
+  if (cb) cb.className = '';
+  var tip = clone.querySelector('#tipbar');
+  if (tip) tip.remove();
+  var out = '<!DOCTYPE html>\n' + clone.outerHTML;
+  download(out, BASENAME + '.html', 'text/html');
+  flash('已导出 ' + BASENAME + '.html，用它替换原文件即可');
+}
+
+/* ---------- 导出 Markdown ---------- */
+function inlineMd(node) {
+  var s = '';
+  for (var i = 0; i < node.childNodes.length; i++) {
+    var c = node.childNodes[i];
+    if (c.nodeType === 3) { s += c.textContent; }
+    else if (c.tagName === 'STRONG' || c.tagName === 'B') { s += '**' + inlineMd(c) + '**'; }
+    else if (c.tagName === 'EM' || c.tagName === 'I') { s += '*' + inlineMd(c) + '*'; }
+    else if (c.tagName === 'CODE') { s += '`' + c.textContent + '`'; }
+    else if (c.tagName === 'BR') { s += '  \n'; }
+    else { s += inlineMd(c); }
+  }
+  return s.replace(/[ \t]*\n[ \t]*/g, ' ').replace(/ {2,}/g, ' ');
+}
+
+function blockMd(node, out) {
+  for (var i = 0; i < node.children.length; i++) {
+    var n = node.children[i], t = n.tagName;
+    if (t === 'H1' || t === 'H2' || t === 'H3' || t === 'H4') {
+      out.push(new Array(+t.charAt(1) + 1).join('#') + ' ' + inlineMd(n).trim(), '');
+    } else if (t === 'P') {
+      out.push(inlineMd(n).trim(), '');
+    } else if (t === 'UL' || t === 'OL') {
+      for (var j = 0; j < n.children.length; j++) out.push('- ' + inlineMd(n.children[j]).trim());
+      out.push('');
+    } else if (t === 'BLOCKQUOTE') {
+      out.push('> ' + inlineMd(n).trim(), '');
+    } else if (t === 'PRE') {
+      var code = n.querySelector('code');
+      out.push('```', (code ? code.textContent : n.textContent).replace(/\n+$/, ''), '```', '');
+    } else if (t === 'TABLE') {
+      var rows = n.querySelectorAll('tr');
+      for (var k = 0; k < rows.length; k++) {
+        var cells = [];
+        for (var m = 0; m < rows[k].children.length; m++) {
+          cells.push(inlineMd(rows[k].children[m]).trim().replace(/\|/g, '\\|'));
+        }
+        out.push('| ' + cells.join(' | ') + ' |');
+        if (k === 0) {
+          var sep = [];
+          for (var q = 0; q < cells.length; q++) sep.push('---');
+          out.push('| ' + sep.join(' | ') + ' |');
+        }
+      }
+      out.push('');
+    } else if (t === 'HR') {
+      out.push('---', '');
+    } else {
+      blockMd(n, out);
+    }
+  }
+}
+
+function exportMD() {
+  var out = [];
+  blockMd(DOC, out);
+  var text = out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  download(text, BASENAME + '.md', 'text/plain');
+  flash('已导出 ' + BASENAME + '.md');
+}
+
+/* ---------- 下载 ---------- */
+function download(text, filename, type) {
+  var blob = new Blob([text], { type: type + ';charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
+}
+
+/* ---------- 代码块一键复制 ---------- */
+function bindCopyButtons() {
+  var pres = document.querySelectorAll('#doc pre');
+  for (var i = 0; i < pres.length; i++) {
+    (function (pre) {
+      if (pre.querySelector('.copybtn')) return;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'copybtn noprint';
+      btn.textContent = '复制';
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        var code = pre.querySelector('code');
+        copyCode(code ? code.textContent : pre.textContent, btn);
+      });
+      pre.appendChild(btn);
+    })(pres[i]);
+  }
+}
+
+function copyCode(text, btn) {
+  function ok() {
+    btn.textContent = '已复制';
+    btn.classList.add('ok');
+    setTimeout(function () { btn.textContent = '复制'; btn.classList.remove('ok'); }, 1500);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.top = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    var done = false;
+    try { done = document.execCommand('copy'); } catch (err) { done = false; }
+    document.body.removeChild(ta);
+    if (done) { ok(); } else { btn.textContent = '请手动复制'; setTimeout(function () { btn.textContent = '复制'; }, 1500); }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(ok, fallback);
+  } else {
+    fallback();
+  }
+}
+
+loadSaved();
+bindCopyButtons();
+</script>
+</body>
+</html>

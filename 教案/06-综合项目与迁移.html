@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>嵌入式系统设计教案 · 综合项目与迁移</title>
+<style>
+  :root { --ink:#1f2330; --muted:#6b7280; --line:#e2e6f0; --accent:#1f6feb; --bg:#f7f8fc; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+         font-size:15px; line-height:1.85; }
+  header { position:sticky; top:0; z-index:30; background:rgba(255,255,255,.95); backdrop-filter:blur(8px);
+           border-bottom:1px solid var(--line); padding:12px 26px; display:flex; align-items:center; gap:14px; }
+  header b { font-size:16px; }
+  header small { color:var(--muted); font-size:12.5px; }
+  header .sp { margin-left:auto; display:flex; gap:8px; }
+  button { font:inherit; font-size:13px; border:1px solid var(--line); background:#fff; color:var(--ink);
+           border-radius:9px; padding:7px 13px; cursor:pointer; }
+  button:hover { background:#eef2ff; border-color:#c7d2fe; }
+  .wrap { display:flex; align-items:flex-start; gap:28px; max-width:1280px; margin:0 auto; padding:26px 26px 90px; }
+  nav { position:sticky; top:78px; flex:0 0 268px; max-height:calc(100vh - 110px); overflow:auto;
+        background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 12px;
+        box-shadow:0 1px 3px rgba(20,30,60,.05); }
+  nav h3 { margin:2px 6px 10px; font-size:12.5px; color:var(--muted); letter-spacing:1px; font-weight:600; }
+  nav a { display:block; text-decoration:none; color:#3c4356; font-size:13px; padding:5px 9px;
+          border-radius:8px; border-left:3px solid transparent; }
+  nav a:hover { background:#f1f4ff; color:var(--accent); }
+  nav a.l3 { padding-left:24px; font-size:12.5px; color:#5c6478; }
+  nav details { margin:2px 0; }
+  nav summary { cursor:pointer; font-size:13px; font-weight:600; padding:5px 8px; border-radius:8px;
+                color:#2a3145; list-style:none; }
+  nav summary::-webkit-details-marker { display:none; }
+  nav summary::before { content:"\25B8"; display:inline-block; width:14px; color:#9aa3b8;
+                        transition:.15s; }
+  nav details[open] > summary::before { transform:rotate(90deg); }
+  nav summary:hover { background:#f1f4ff; color:var(--accent); }
+  nav a.l2.solo { font-weight:600; }
+  .navtools { display:flex; gap:6px; margin:0 4px 10px; }
+  .navtools button { flex:1; padding:5px 8px; font-size:12px; }
+  article { flex:1 1 auto; min-width:0; background:#fff; border:1px solid var(--line); border-radius:16px;
+            padding:34px 40px 60px; box-shadow:0 2px 10px rgba(20,30,60,.05); }
+  article h1 { font-size:26px; margin:0 0 6px; padding-bottom:14px; border-bottom:3px solid var(--accent); }
+  article h2 { font-size:21px; margin:44px 0 14px; padding:8px 0 8px 14px; border-left:6px solid var(--accent);
+               background:linear-gradient(90deg,rgba(0,0,0,.035),transparent); border-radius:0 8px 8px 0; }
+  article h1, article h2, article h3 { scroll-margin-top:80px; }
+  article h3 { font-size:17px; margin:26px 0 10px; color:#2a3145; }
+  article p { margin:10px 0; }
+  article strong { color:#111827; }
+  article code { background:#f2f4fa; border:1px solid #e6e9f2; border-radius:5px; padding:1px 5px;
+                 font-family:"Cascadia Mono",Consolas,"Courier New",monospace; font-size:13px; color:#b5305f; }
+  pre { background:#22262f; color:#e6e9f2; border-radius:12px; padding:18px 20px; overflow:auto; line-height:1.6; }
+  pre code { background:none; border:none; color:inherit; padding:0; font-size:13px; }
+  blockquote { margin:16px 0; padding:12px 18px; background:#f4f7ff; border-left:5px solid var(--accent);
+               border-radius:0 10px 10px 0; color:#3d4763; }
+  blockquote p { margin:0; }
+  hr { border:none; border-top:1px dashed var(--line); margin:34px 0; }
+  ul { margin:10px 0; padding-left:0; list-style:none; }
+  li { position:relative; padding:4px 0 4px 20px; }
+  li::before { content:""; position:absolute; left:4px; top:14px; width:6px; height:6px; border-radius:50%;
+               background:var(--accent); opacity:.55; }
+  ol { margin:10px 0; padding-left:34px; }
+  ol li { list-style:decimal; padding:4px 0; }
+  ol li::before { content:none; }
+  .tw { overflow-x:auto; margin:16px 0; border-radius:12px; border:1px solid var(--line); }
+  table { border-collapse:collapse; width:100%; min-width:520px; font-size:14px; }
+  th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:9px 12px;
+           text-align:left; vertical-align:top; }
+  th { background:#f2f5fd; font-weight:600; white-space:nowrap; }
+  tr:last-child td { border-bottom:none; }
+  th:last-child, td:last-child { border-right:none; }
+  tbody tr:hover { background:#fafbff; }
+  #tipbar { display:none; margin:0 0 18px; padding:10px 14px; border-radius:10px; font-size:13px;
+            background:#fff8dc; border:1px solid #f0c419; color:#6b5300; }
+  body.editing #tipbar { display:block; }
+  body.editing #doc { outline:2px dashed #f0c419; outline-offset:16px; border-radius:8px; }
+  body.editing #doc :is(h1,h2,h3,h4):hover,
+  body.editing #doc :is(p,li,td,th):hover { background:#fffbe6; }
+  #doc[contenteditable="true"] { cursor:text; }
+  .banner { max-width:1280px; margin:16px auto -8px; padding:12px 18px; border-radius:12px;
+            font-size:13.5px; line-height:1.7; border:1px solid #d7ddea; background:#f3f6ff; color:#2a3145; }
+  .banner.warn { background:#fff8dc; border-color:#f0c419; color:#6b5300; }
+  .banner button { margin-left:8px; padding:5px 12px; font-size:12.5px; }
+  .banner button.primary { background:#1f6feb; border-color:#1f6feb; color:#fff; }
+  .pagenav { display:flex; gap:6px; flex-wrap:wrap; }
+  .pagenav a { font-size:12.5px; text-decoration:none; color:#3c4356; border:1px solid var(--line);
+               background:#fff; border-radius:9px; padding:6px 11px; }
+  .pagenav a:hover { background:#eef2ff; border-color:#c7d2fe; color:var(--accent); }
+  .pagenav a.cur { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .flash { position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:99;
+           background:#1f2330; color:#fff; padding:10px 18px; border-radius:10px; font-size:13px;
+           box-shadow:0 6px 20px rgba(0,0,0,.25); }
+  #doc a { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(31,111,235,.35); }
+  #doc a:hover { border-bottom-color:var(--accent); }
+  nav a.l4 { padding-left:40px; font-size:11.5px; color:#6b7385; }
+  .fig { margin:18px 0; text-align:center; }
+  .fig img { max-width:100%; height:auto; border:1px solid var(--line); border-radius:10px;
+             background:#fff; }
+  .fig figcaption { margin-top:8px; font-size:13px; color:var(--muted); }
+  #doc pre { position:relative; }
+  .copybtn { position:absolute; top:8px; right:8px; z-index:5; padding:3px 10px; font-size:12px;
+             border-radius:7px; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14);
+             color:#e6e9f2; cursor:pointer; opacity:0; transition:.15s; user-select:none;
+             font-family:inherit; line-height:1.4; }
+  #doc pre:hover .copybtn { opacity:1; }
+  .copybtn:hover { background:rgba(255,255,255,.28); }
+  .copybtn.ok { background:#2e7d32; border-color:#2e7d32; color:#fff; opacity:1; }
+  @media (max-width:900px) { .copybtn { opacity:1; } }
+  @media (max-width:900px) {
+    .wrap { flex-direction:column; padding:16px; }
+    nav { position:static; flex:none; width:100%; max-height:none; }
+    article { padding:22px 18px 40px; }
+  }
+  @media print {
+    body { background:#fff; font-size:11.5pt; }
+    header, nav, .noprint { display:none !important; }
+    .wrap { display:block; max-width:none; padding:0; }
+    article { border:none; box-shadow:none; border-radius:0; padding:0; }
+    article h1 { font-size:20pt; }
+    article h2 { font-size:15pt; margin-top:0; page-break-before:always; page-break-after:avoid; }
+    article h1 + blockquote + hr + h2, article h2:first-of-type { page-break-before:avoid; }
+    article h3 { font-size:12.5pt; page-break-after:avoid; }
+    table, pre, blockquote, li { page-break-inside:avoid; }
+    th { background:#eee; }
+    pre { background:#f4f4f6; color:#111; border:1px solid #ccc; }
+    @page { margin:14mm 12mm; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <b>嵌入式系统设计教案 · 综合项目与迁移</b><small>综合项目与考核 · 实验安全规范 · 衔接 STM32 ｜ 共 7 册</small>
+<div class="pagenav"><a href="00-索引.html">索引</a><a href="01-课程与基础准备.html">01 基础</a><a href="02-外设与通信.html">02 外设</a><a href="03-无线与系统.html">03 无线</a><a href="04-小车开发板实验.html">04 小车</a><a href="05-无人机开发板实验.html">05 无人机</a><a href="06-综合项目与迁移.html" class="cur">06 综合</a><a href="07-附录.html">07 附录</a></div>
+  <span class="sp">
+    <button id="btnEdit" onclick="toggleEdit()">编辑内容</button>
+    <button id="btnSave" onclick="saveLocal()" hidden>保存修改</button>
+    <button id="btnHtml" onclick="exportHTML()">导出 HTML</button>
+    <button id="btnMd" onclick="exportMD()">导出 Markdown</button>
+    <button id="btnReset" onclick="resetDoc()" hidden>恢复原始</button>
+    <button onclick="window.print()">打印 / PDF</button>
+  </span>
+</header>
+<div id="banner" class="banner" style="display:none"></div>
+<div class="wrap">
+  <nav>
+    <h3>目 录</h3>
+    <div class="navtools noprint">
+      <button onclick="document.querySelectorAll('nav details').forEach(d=>d.open=true)">全部展开</button>
+      <button onclick="document.querySelectorAll('nav details').forEach(d=>d.open=false)">全部折叠</button>
+    </div>
+    <details open><summary>十一、综合项目与考核</summary><a class='l3' href='#1-综合项目选题'>1. 综合项目选题</a><a class='l3' href='#2-项目交付要求'>2. 项目交付要求</a><a class='l3' href='#3-评分构成'>3. 评分构成</a><a class='l3' href='#4-阶段验收节点'>4. 阶段验收节点</a></details>
+<details open><summary>十二、实验安全与操作规范</summary><a class='l3' href='#1-用电安全'>1. 用电安全</a><a class='l3' href='#2-器件保护'>2. 器件保护</a><a class='l3' href='#3-开发规范'>3. 开发规范</a><a class='l3' href='#4-场地与运行安全'>4. 场地与运行安全</a></details>
+<details open><summary>十三、衔接 STM32</summary><a class='l3' href='#13-1-最小系统'>13.1 最小系统</a><a class='l3' href='#13-2-时钟树'>13.2 时钟树</a><a class='l3' href='#13-3-复位电路'>13.3 复位电路</a><a class='l3' href='#13-4-电源电路'>13.4 电源电路</a><a class='l3' href='#13-5-定时器'>13.5 定时器</a><a class='l3' href='#13-6-中断'>13.6 中断</a><a class='l3' href='#13-7-优先级'>13.7 优先级</a><a class='l3' href='#13-8-esp-idf-与-stm32-hal-对照'>13.8 ESP-IDF 与 STM32 HAL 对照</a><a class='l3' href='#13-9-迁移实验与验收'>13.9 迁移实验与验收</a></details>
+  </nav>
+  <article id="doc"><h1>嵌入式系统设计教案 · 综合项目与迁移</h1>
+<blockquote><p><strong>教学平台</strong>：ESP32-S3 核心板 · ESP32 智能小车开发板 · ESP32-S3 无人机开发板<br/><strong>软件框架</strong>：ESP-IDF（乐鑫官方框架）<br/><strong>代码说明</strong>：第 1~3、6 册的教学示例只使用 Espressif 官方组件（<code>driver</code> / <code>esp_wifi</code> / <code>esp_ble</code> / <code>esp_http_server</code> / <code>esp_camera</code> / <code>freertos</code>）；第 4、5 册的实验代码取自配套开发板工程，其中包含课程自研组件（<code>icm20602</code>、<code>PMW3901</code>、<code>spl06001</code>、<code>VL53L0X</code> 等）以及电脑端 Qt 上位机程序。</p></blockquote>
+<hr/>
+<h2 id='十一-综合项目与考核'>十一、综合项目与考核</h2>
+<h3 id='1-综合项目选题'>1. 综合项目选题</h3>
+<div class='tw'><table><thead><tr><th>选题</th><th>建议平台</th><th>核心考核点</th></tr></thead><tbody><tr><td>智能环境监测节点</td><td>小车开发板</td><td>传感器采集 + WiFi 上报 + 网页展示</td></tr><tr><td>无线遥控小车</td><td>小车开发板</td><td>电机 PWM 调速 + 无线指令 + 状态回传</td></tr><tr><td>视觉巡线小车</td><td>小车开发板</td><td>图像采集 + 数据处理 + 运动控制</td></tr><tr><td>飞行姿态显示仪</td><td>无人机开发板</td><td>惯性数据采集 + 姿态解算 + 上位机显示</td></tr><tr><td>定高与水平位移估计</td><td>无人机开发板</td><td>气压测高 + 光流测位移 + 数据融合</td></tr></tbody></table></div>
+<h3 id='2-项目交付要求'>2. 项目交付要求</h3>
+<ul><li><strong>功能演示</strong>：现场完成端到端演示，功能稳定可复现。</li><li><strong>系统框图</strong>：画出硬件连接图、任务划分图与数据流图。</li><li><strong>代码规范</strong>：模块划分清晰，命名规范，关键逻辑有注释。</li><li><strong>技术报告</strong>：包含需求分析、方案设计、关键问题与解决方案、测试数据与结论。</li><li><strong>答辩</strong>：说明设计思路、遇到的困难及解决过程。</li></ul>
+<h3 id='3-评分构成'>3. 评分构成</h3>
+<div class='tw'><table><thead><tr><th>项目</th><th>占比</th><th>评分要点</th></tr></thead><tbody><tr><td>平时表现</td><td>10%</td><td>出勤、课堂参与、实验纪律</td></tr><tr><td>实验报告</td><td>30%</td><td>现象记录完整、数据分析到位、思考题有独立见解</td></tr><tr><td>阶段验收</td><td>20%</td><td>现场抽测，能够改写代码实现指定功能</td></tr><tr><td>综合项目</td><td>40%</td><td>功能完整度、系统设计、异常处理、答辩表现</td></tr></tbody></table></div>
+<h3 id='4-阶段验收节点'>4. 阶段验收节点</h3>
+<ul><li><strong>第一次验收</strong>：GPIO、定时器、ADC 与 UART —— 现场给定引脚与频率要求，独立完成配置。</li><li><strong>第二次验收</strong>：I2C 与 SPI 传感器 —— 独立完成设备挂载与寄存器读取。</li><li><strong>第三次验收</strong>：WiFi 与 FreeRTOS —— 独立完成多任务下的数据采集与网络上报。</li></ul>
+<hr/>
+<h2 id='十二-实验安全与操作规范'>十二、实验安全与操作规范</h2>
+<h3 id='1-用电安全'>1. 用电安全</h3>
+<ul><li>接线、改线操作必须在<strong>断电状态下</strong>进行。</li><li>电机、舵机等大功率负载必须<strong>独立供电</strong>，且与主控板<strong>共地</strong>。</li><li>严禁将 5V 信号直接接入 3.3V 引脚。</li><li>驱动继电器、电机等感性负载必须加续流二极管。</li></ul>
+<h3 id='2-器件保护'>2. 器件保护</h3>
+<ul><li>LED 必须串联限流电阻。</li><li>I2C 总线必须外接上拉电阻（约 4.7kΩ）。</li><li>芯片引脚不得直接驱动超过其电流能力的负载。</li><li>拿取开发板时避免徒手接触引脚造成静电损伤。</li></ul>
+<h3 id='3-开发规范'>3. 开发规范</h3>
+<ul><li>烧录前确认串口号与目标芯片型号。</li><li>修改配置后重新完整编译，不依赖增量构建结果。</li><li>使用 <code>idf.py monitor</code> 查看崩溃回溯信息，定位异常发生位置。</li><li>代码提交前清理调试用的临时打印。</li></ul>
+<h3 id='4-场地与运行安全'>4. 场地与运行安全</h3>
+<ul><li>电机测试时固定小车或架起驱动轮，防止意外冲出。</li><li>无人机项目必须先进行<strong>拆桨调试</strong>，确认各传感器数据正确后再装机试飞。</li><li>飞行测试必须在空旷无人区域进行，并设置紧急停止手段。</li></ul>
+<hr/>
+<h2 id='十三-衔接-stm32'>十三、衔接 STM32</h2>
+<p>ESP32-S3 与 STM32 属于同类微控制器，外设原理、总线协议与 RTOS 思想完全相通，差异主要在<strong>芯片内部资源</strong>与<strong>开发工具链</strong>。本章按"最小系统 → 外设 → 中断与优先级 → API 对照"的顺序完成迁移。</p>
+<h3 id='13-1-最小系统'>13.1 最小系统</h3>
+<p>单片机能正常工作的最小电路由三部分组成：<strong>电源、时钟、复位</strong>。</p>
+<div class='tw'><table><thead><tr><th>部分</th><th>作用</th><th>缺一不可的后果</th></tr></thead><tbody><tr><td>电源</td><td>提供稳定的 3.3V</td><td>芯片不启动或反复复位</td></tr><tr><td>时钟</td><td>提供工作节拍</td><td>程序无法运行，或串口、定时器全部不准</td></tr><tr><td>复位</td><td>提供确定的上电初始状态</td><td>上电状态不确定，程序跑飞</td></tr></tbody></table></div>
+<h3 id='13-2-时钟树'>13.2 时钟树</h3>
+<p><strong>原理</strong>：芯片内部各外设并非工作在同一个频率上。时钟源经倍频得到系统主频，再经各级分频送往不同总线，形成一棵"时钟树"。</p>
+<p>典型结构：</p>
+<pre><code>外部晶振（HSE 8MHz）──→ PLL 倍频 ──→ 系统时钟（SYSCLK，如 168MHz）
+                                        │
+                    ┌───────────────────┼───────────────────┐
+                    ↓                   ↓                   ↓
+              AHB 总线分频        APB1 总线分频        APB2 总线分频
+              （内核、DMA、内存）  （定时器、串口）      （GPIO、SPI、ADC）</code></pre>
+<p><strong>为什么必须掌握</strong>：</p>
+<ul><li>串口波特率由 APB 总线时钟分频得到，<strong>时钟配错直接表现为串口乱码</strong>；</li><li>定时器的计时基准来自总线时钟，<strong>时钟配错会导致定时与 PWM 频率全部偏离</strong>；</li><li>CubeMX 中配置时钟树时，芯片型号、晶振频率、目标主频三者必须一致。</li></ul>
+<h3 id='13-3-复位电路'>13.3 复位电路</h3>
+<p><strong>原理</strong>：复位引脚（NRST）在低电平期间使芯片保持复位状态，释放后芯片从起始地址开始执行。</p>
+<p><strong>典型电路</strong>：NRST 引脚接 10kΩ 上拉到 3.3V，并接 100nF 电容到地。上电瞬间电容电压不能突变，NRST 被短暂拉低，保证芯片在电源稳定后才开始运行。</p>
+<p><strong>常见故障</strong>：电容容量过大导致复位时间过长，表现为"上电后要等一两秒才开始工作"。</p>
+<h3 id='13-4-电源电路'>13.4 电源电路</h3>
+<p><strong>典型设计</strong>：</p>
+<ul><li>每个电源引脚旁放置 <strong>0.1μF</strong> 陶瓷电容到地（去耦，滤除高频噪声）；</li><li>电源输入端放置 <strong>10μF ~ 100μF</strong> 电解电容（储能，应对负载突变）；</li><li>模拟电源与数字电源通过磁珠或 0Ω 电阻隔离，降低数字电路对 ADC 的干扰。</li></ul>
+<p><strong>电源分层原则</strong>：</p>
+<div class='tw'><table><thead><tr><th>负载类型</th><th>供电方式</th><th>注意</th></tr></thead><tbody><tr><td>主控与传感器</td><td>3.3V LDO 供电</td><td>与电机电源共地</td></tr><tr><td>直流电机、舵机</td><td>独立电池供电</td><td>电流大，不可与主控共用一路</td></tr><tr><td>继电器线圈</td><td>独立 5V/12V 供电</td><td>必须并续流二极管</td></tr></tbody></table></div>
+<h3 id='13-5-定时器'>13.5 定时器</h3>
+<p><strong>原理</strong>：STM32 的定时器由时钟源、预分频器（PSC）、计数器（CNT）、自动重装载寄存器（ARR）组成。</p>
+<pre><code>更新频率 = 定时器时钟 / [(PSC + 1) × (ARR + 1)]</code></pre>
+<p>例如定时器时钟 84MHz，要求 1kHz 更新频率：取 <code>PSC = 83</code>（分频后 1MHz），则 <code>ARR = 999</code>。</p>
+<p><strong>两种典型用法</strong>：</p>
+<ul><li><strong>定时中断</strong>：周期进入中断服务函数，适合周期性采集与任务调度；</li><li><strong>PWM 输出</strong>：由 ARR 决定周期，由比较寄存器 CCR 决定占空比，适合调光、调速、舵机控制。</li></ul>
+<pre><code>/* 启动 PWM 输出 */
+HAL_TIM_PWM_Start(&amp;htim2, TIM_CHANNEL_1);
+
+/* 修改占空比：CCR 值越大，高电平时间越长 */
+__HAL_TIM_SET_COMPARE(&amp;htim2, TIM_CHANNEL_1, 500);
+
+/* 定时中断回调：到点自动进入，函数名不能修改 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+}</code></pre>
+<h3 id='13-6-中断'>13.6 中断</h3>
+<p><strong>原理</strong>：中断是"事件驱动"的执行方式。外设产生中断请求后，CPU 暂停当前程序，跳转执行中断服务函数，执行完毕返回原处继续。</p>
+<p><strong>与轮询的对比</strong>：</p>
+<div class='tw'><table><thead><tr><th>方式</th><th>实现</th><th>优点</th><th>缺点</th></tr></thead><tbody><tr><td>轮询</td><td>主循环反复查询标志位</td><td>实现简单</td><td>浪费 CPU，事件密集时容易漏检</td></tr><tr><td>中断</td><td>事件触发时自动跳转</td><td>响应及时，CPU 利用率高</td><td>需配置优先级，处理函数必须简短</td></tr></tbody></table></div>
+<p><strong>中断服务函数的四条铁律</strong>：</p>
+<ol><li>函数必须简短，只做标志位设置或数据入队；</li><li><strong>禁止调用阻塞式接口</strong>（<code>HAL_Delay()</code>、<code>vTaskDelay()</code>）；</li><li>共享变量必须加 <code>volatile</code> 修饰，防止编译器优化导致读取到旧值；</li><li>与 RTOS 交互时使用中断安全版本接口。</li></ol>
+<pre><code>/* 外部中断回调：按键按下时自动执行 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);      /* 只做简单操作 */
+}</code></pre>
+<h3 id='13-7-优先级'>13.7 优先级</h3>
+<p><strong>这是最容易记混的地方，务必区分两套体系</strong>：</p>
+<div class='tw'><table><thead><tr><th>体系</th><th>规则</th></tr></thead><tbody><tr><td>STM32 中断优先级（NVIC）</td><td><strong>数值越小，优先级越高</strong>（0 为最高）</td></tr><tr><td>FreeRTOS 任务优先级</td><td><strong>数值越大，优先级越高</strong></td></tr></tbody></table></div>
+<p><strong>其他要点</strong>：</p>
+<ul><li>中断优先级高于任何任务，除被临界区临时屏蔽外，中断总能抢占任务；</li><li>NVIC 优先级分为抢占优先级与子优先级，需先通过 <code>HAL_NVIC_SetPriorityGrouping()</code> 设置分组；</li><li>多个中断按重要性从 0 开始依次分配，不要全部填 0。</li></ul>
+<h3 id='13-8-esp-idf-与-stm32-hal-对照'>13.8 ESP-IDF 与 STM32 HAL 对照</h3>
+<div class='tw'><table><thead><tr><th>功能</th><th>ESP-IDF（ESP32-S3）</th><th>STM32 HAL</th></tr></thead><tbody><tr><td>引脚方向</td><td><code>gpio_set_direction()</code></td><td><code>HAL_GPIO_Init()</code> 配置 <code>GPIO_InitTypeDef</code></td></tr><tr><td>输出电平</td><td><code>gpio_set_level()</code></td><td><code>HAL_GPIO_WritePin()</code></td></tr><tr><td>读取电平</td><td><code>gpio_get_level()</code></td><td><code>HAL_GPIO_ReadPin()</code></td></tr><tr><td>串口发送</td><td><code>uart_write_bytes()</code></td><td><code>HAL_UART_Transmit()</code></td></tr><tr><td>串口接收中断</td><td>事件队列 + 接收任务</td><td><code>HAL_UART_Receive_IT()</code> + 回调</td></tr><tr><td>I2C 读写</td><td><code>i2c_master_transmit_receive()</code></td><td><code>HAL_I2C_Mem_Read()</code> / <code>HAL_I2C_Mem_Write()</code></td></tr><tr><td>SPI 传输</td><td><code>spi_device_polling_transmit()</code></td><td><code>HAL_SPI_Transmit()</code> / <code>HAL_SPI_TransmitReceive()</code></td></tr><tr><td>PWM 输出</td><td><code>ledc_set_duty()</code></td><td><code>__HAL_TIM_SET_COMPARE()</code></td></tr><tr><td>ADC 采样</td><td><code>adc1_get_raw()</code></td><td><code>HAL_ADC_Start()</code> + <code>HAL_ADC_GetValue()</code></td></tr><tr><td>阻塞延时</td><td><code>vTaskDelay()</code></td><td><code>HAL_Delay()</code>（基于 SysTick）</td></tr><tr><td>定时器中断</td><td>GPTimer 回调</td><td><code>HAL_TIM_PeriodElapsedCallback()</code></td></tr><tr><td>RTOS</td><td>FreeRTOS 原生</td><td>CubeMX 配置 + CMSIS-RTOS v2 封装</td></tr></tbody></table></div>
+<p><strong>迁移方法</strong>：外设原理与调试方法完全沿用，只需替换初始化流程与 API 名称。重点学习三处差异：<strong>时钟树需要自行配置</strong>、<strong>中断优先级需要自行分组</strong>、<strong>外设以句柄结构体（<code>UART_HandleTypeDef</code> 等）统一管理</strong>。</p>
+<h3 id='13-9-迁移实验与验收'>13.9 迁移实验与验收</h3>
+<div class='tw'><table><thead><tr><th>序号</th><th>实验内容</th><th>对应本课程章节</th><th>验收标准</th></tr></thead><tbody><tr><td>1</td><td>CubeMX 配置时钟与 GPIO，LED 闪烁</td><td>7.1 / 实验一</td><td>时钟树各节点频率与预期一致</td></tr><tr><td>2</td><td>定时器 PWM 输出，控制 LED 亮度与舵机角度</td><td>7.2 / 7.9</td><td>示波器实测频率与占空比正确</td></tr><tr><td>3</td><td>ADC 采集光敏并串口输出</td><td>7.3 / 实验四</td><td>电压换算结果与万用表一致</td></tr><tr><td>4</td><td>UART 收发与 printf 重定向</td><td>7.4 / 实验三</td><td>自收发测试通过，无乱码</td></tr><tr><td>5</td><td>I2C 读取 IMU，SPI 读取气压计</td><td>7.6 / 7.7</td><td>能读出身份寄存器并解析数据</td></tr><tr><td>6</td><td>外部中断触发按键并消抖</td><td>13.6</td><td>按键响应无抖动误触发</td></tr><tr><td>7</td><td>CubeMX 配置 FreeRTOS，多任务 + 队列</td><td>8.4</td><td>任务之间通过队列通信正常</td></tr><tr><td>8</td><td>CAN 总线收发（STM32 特有）</td><td>—</td><td>两个节点之间报文收发正常</td></tr></tbody></table></div>
+<p><strong>验收总标准</strong>：能在 STM32 上独立复现"采集 → 处理 → 上报 → 执行"的完整链路，并说清 ESP-IDF 与 STM32 HAL 在初始化流程、中断模型、RTOS 集成三方面的差异。</p>
+<hr/></article>
+</div>
+
+<div id="tipbar">
+  <b>编辑模式已打开。</b>直接点文字就能改、删、加。<br/>
+  改完请点上方 <b>「保存修改」</b>（存在这个浏览器里，下次打开还在），
+  或点 <b>「导出 HTML」</b> 下载成一个新文件，用它替换原来的文件即可。<br/>
+  想变回去就点 <b>「恢复原始」</b>。
+</div>
+<script>
+var DOC = document.getElementById('doc');
+var NAV = document.querySelector('nav');
+var BASENAME = decodeURIComponent(location.pathname.split('/').pop() || 'document').replace(/\.html?$/i, '') || 'document';
+var KEY = 'docedit::' + BASENAME;
+var DOC_SIG = '25c5826b8fcf';   /* 构建签名：文件一变，签名就变 */
+
+function flash(msg) {
+  var old = document.querySelector('.flash');
+  if (old) old.remove();
+  var d = document.createElement('div');
+  d.className = 'flash';
+  d.textContent = msg;
+  document.body.appendChild(d);
+  setTimeout(function () { d.remove(); }, 2600);
+}
+
+/* ---------- 编辑模式 ---------- */
+function toggleEdit() {
+  var on = document.body.classList.toggle('editing');
+  DOC.setAttribute('contenteditable', on ? 'true' : 'false');
+  document.getElementById('btnEdit').textContent = on ? '退出编辑' : '编辑内容';
+  document.getElementById('btnSave').hidden = !on;
+  document.getElementById('btnReset').hidden = !localStorage.getItem(KEY);
+  if (on) { flash('编辑模式已打开，改完记得保存或导出'); }
+}
+
+/* ---------- 保存到浏览器（只存浏览器，不改磁盘文件） ---------- */
+function saveLocal() {
+  try {
+    rebuildTOC();
+    var rec = { sig: DOC_SIG, time: new Date().toLocaleString(), html: DOC.innerHTML };
+    localStorage.setItem(KEY, JSON.stringify(rec));
+    showBanner('已保存到浏览器（' + rec.time + '）。<b>注意：这不会改动磁盘上的文件</b>，'
+      + '要发给别人或换电脑，请点「导出 HTML」下载文件。', 'info');
+  } catch (e) {
+    showBanner('这个浏览器不允许自动保存，请用「导出 HTML」把内容保存成文件。', 'warn');
+  }
+}
+
+function resetDoc() {
+  if (!confirm('确定丢弃浏览器里的修改，恢复成文件当前的内容吗？')) return;
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  location.reload();
+}
+
+/* ---------- 启动检查：不再自动覆盖文件内容 ---------- */
+function showBanner(html, kind) {
+  var el = document.getElementById('banner');
+  el.className = 'banner ' + (kind || 'info');
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+function hideBanner() {
+  document.getElementById('banner').style.display = 'none';
+}
+
+function loadSaved() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    var rec = JSON.parse(raw);
+    if (!rec || !rec.html) { localStorage.removeItem(KEY); return; }
+
+    if (rec.sig === DOC_SIG) {
+      showBanner('检测到你在浏览器里保存过的修改（' + rec.time + '）。'
+        + '<button class="primary" onclick="applySaved()">恢复修改</button>'
+        + '<button onclick="dropSaved()">丢弃</button>');
+    } else {
+      showBanner('<b>这个文件已经更新过了。</b>你浏览器里保存的修改是基于旧版本的（' + rec.time
+        + '），直接恢复会看不到新加的内容。'
+        + '<button class="primary" onclick="dropSaved()">丢弃旧修改（推荐）</button>'
+        + '<button onclick="applySaved()">仍要恢复旧修改</button>', 'warn');
+    }
+  } catch (e) {
+    try { localStorage.removeItem(KEY); } catch (e2) {}
+  }
+}
+
+function applySaved() {
+  try {
+    var rec = JSON.parse(localStorage.getItem(KEY));
+    if (rec && rec.html) { DOC.innerHTML = rec.html; rebuildTOC(); bindCopyButtons(); flash('已恢复浏览器里的修改'); }
+  } catch (e) {}
+  hideBanner();
+}
+
+function dropSaved() {
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  hideBanner();
+  flash('已丢弃浏览器副本，当前显示的是文件里的最新内容');
+}
+
+/* ---------- 重建左侧目录 ---------- */
+function rebuildTOC() {
+  if (!NAV) return;
+  var heads = DOC.querySelectorAll('h2, h3');
+  var html = '', cur = null, n = 0;
+  for (var i = 0; i < heads.length; i++) {
+    var h = heads[i];
+    n = n + 1;
+    if (!h.id) h.id = 'e' + n;
+    var txt = h.textContent.trim();
+    var safe = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (h.tagName === 'H2' || cur === null) {
+      if (cur) html += cur.kids.length ? '</details>' : '</a>';
+      cur = { id: h.id, kids: [] };
+      html += cur.kids ? '' : '';
+      html += (h.tagName === 'H2')
+        ? '<details open><summary>' + safe + '</summary>'
+        : '<a class="l2 solo" href="#' + h.id + '">' + safe + '</a>';
+    } else {
+      html += '<a class="l3" href="#' + h.id + '">' + safe + '</a>';
+      cur.kids.push(1);
+    }
+  }
+  if (cur && cur.kids.length) html += '</details>';
+  var head = NAV.querySelector('h3');
+  var tools = NAV.querySelector('.navtools');
+  NAV.innerHTML = '';
+  if (head) NAV.appendChild(head);
+  if (tools) NAV.appendChild(tools);
+  NAV.insertAdjacentHTML('beforeend', html);
+}
+
+/* ---------- 导出 HTML ---------- */
+function exportHTML() {
+  rebuildTOC();
+  var clone = document.documentElement.cloneNode(true);
+  var c = clone.querySelector('#doc');
+  c.innerHTML = DOC.innerHTML;
+  c.removeAttribute('contenteditable');
+  var cb = clone.querySelector('body');
+  if (cb) cb.className = '';
+  var tip = clone.querySelector('#tipbar');
+  if (tip) tip.remove();
+  var out = '<!DOCTYPE html>\n' + clone.outerHTML;
+  download(out, BASENAME + '.html', 'text/html');
+  flash('已导出 ' + BASENAME + '.html，用它替换原文件即可');
+}
+
+/* ---------- 导出 Markdown ---------- */
+function inlineMd(node) {
+  var s = '';
+  for (var i = 0; i < node.childNodes.length; i++) {
+    var c = node.childNodes[i];
+    if (c.nodeType === 3) { s += c.textContent; }
+    else if (c.tagName === 'STRONG' || c.tagName === 'B') { s += '**' + inlineMd(c) + '**'; }
+    else if (c.tagName === 'EM' || c.tagName === 'I') { s += '*' + inlineMd(c) + '*'; }
+    else if (c.tagName === 'CODE') { s += '`' + c.textContent + '`'; }
+    else if (c.tagName === 'BR') { s += '  \n'; }
+    else { s += inlineMd(c); }
+  }
+  return s.replace(/[ \t]*\n[ \t]*/g, ' ').replace(/ {2,}/g, ' ');
+}
+
+function blockMd(node, out) {
+  for (var i = 0; i < node.children.length; i++) {
+    var n = node.children[i], t = n.tagName;
+    if (t === 'H1' || t === 'H2' || t === 'H3' || t === 'H4') {
+      out.push(new Array(+t.charAt(1) + 1).join('#') + ' ' + inlineMd(n).trim(), '');
+    } else if (t === 'P') {
+      out.push(inlineMd(n).trim(), '');
+    } else if (t === 'UL' || t === 'OL') {
+      for (var j = 0; j < n.children.length; j++) out.push('- ' + inlineMd(n.children[j]).trim());
+      out.push('');
+    } else if (t === 'BLOCKQUOTE') {
+      out.push('> ' + inlineMd(n).trim(), '');
+    } else if (t === 'PRE') {
+      var code = n.querySelector('code');
+      out.push('```', (code ? code.textContent : n.textContent).replace(/\n+$/, ''), '```', '');
+    } else if (t === 'TABLE') {
+      var rows = n.querySelectorAll('tr');
+      for (var k = 0; k < rows.length; k++) {
+        var cells = [];
+        for (var m = 0; m < rows[k].children.length; m++) {
+          cells.push(inlineMd(rows[k].children[m]).trim().replace(/\|/g, '\\|'));
+        }
+        out.push('| ' + cells.join(' | ') + ' |');
+        if (k === 0) {
+          var sep = [];
+          for (var q = 0; q < cells.length; q++) sep.push('---');
+          out.push('| ' + sep.join(' | ') + ' |');
+        }
+      }
+      out.push('');
+    } else if (t === 'HR') {
+      out.push('---', '');
+    } else {
+      blockMd(n, out);
+    }
+  }
+}
+
+function exportMD() {
+  var out = [];
+  blockMd(DOC, out);
+  var text = out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  download(text, BASENAME + '.md', 'text/plain');
+  flash('已导出 ' + BASENAME + '.md');
+}
+
+/* ---------- 下载 ---------- */
+function download(text, filename, type) {
+  var blob = new Blob([text], { type: type + ';charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
+}
+
+/* ---------- 代码块一键复制 ---------- */
+function bindCopyButtons() {
+  var pres = document.querySelectorAll('#doc pre');
+  for (var i = 0; i < pres.length; i++) {
+    (function (pre) {
+      if (pre.querySelector('.copybtn')) return;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'copybtn noprint';
+      btn.textContent = '复制';
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        var code = pre.querySelector('code');
+        copyCode(code ? code.textContent : pre.textContent, btn);
+      });
+      pre.appendChild(btn);
+    })(pres[i]);
+  }
+}
+
+function copyCode(text, btn) {
+  function ok() {
+    btn.textContent = '已复制';
+    btn.classList.add('ok');
+    setTimeout(function () { btn.textContent = '复制'; btn.classList.remove('ok'); }, 1500);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.top = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    var done = false;
+    try { done = document.execCommand('copy'); } catch (err) { done = false; }
+    document.body.removeChild(ta);
+    if (done) { ok(); } else { btn.textContent = '请手动复制'; setTimeout(function () { btn.textContent = '复制'; }, 1500); }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(ok, fallback);
+  } else {
+    fallback();
+  }
+}
+
+loadSaved();
+bindCopyButtons();
+</script>
+</body>
+</html>

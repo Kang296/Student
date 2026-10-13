@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>嵌入式系统设计教案 · 外设与通信</title>
+<style>
+  :root { --ink:#1f2330; --muted:#6b7280; --line:#e2e6f0; --accent:#1f6feb; --bg:#f7f8fc; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+         font-size:15px; line-height:1.85; }
+  header { position:sticky; top:0; z-index:30; background:rgba(255,255,255,.95); backdrop-filter:blur(8px);
+           border-bottom:1px solid var(--line); padding:12px 26px; display:flex; align-items:center; gap:14px; }
+  header b { font-size:16px; }
+  header small { color:var(--muted); font-size:12.5px; }
+  header .sp { margin-left:auto; display:flex; gap:8px; }
+  button { font:inherit; font-size:13px; border:1px solid var(--line); background:#fff; color:var(--ink);
+           border-radius:9px; padding:7px 13px; cursor:pointer; }
+  button:hover { background:#eef2ff; border-color:#c7d2fe; }
+  .wrap { display:flex; align-items:flex-start; gap:28px; max-width:1280px; margin:0 auto; padding:26px 26px 90px; }
+  nav { position:sticky; top:78px; flex:0 0 268px; max-height:calc(100vh - 110px); overflow:auto;
+        background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 12px;
+        box-shadow:0 1px 3px rgba(20,30,60,.05); }
+  nav h3 { margin:2px 6px 10px; font-size:12.5px; color:var(--muted); letter-spacing:1px; font-weight:600; }
+  nav a { display:block; text-decoration:none; color:#3c4356; font-size:13px; padding:5px 9px;
+          border-radius:8px; border-left:3px solid transparent; }
+  nav a:hover { background:#f1f4ff; color:var(--accent); }
+  nav a.l3 { padding-left:24px; font-size:12.5px; color:#5c6478; }
+  nav details { margin:2px 0; }
+  nav summary { cursor:pointer; font-size:13px; font-weight:600; padding:5px 8px; border-radius:8px;
+                color:#2a3145; list-style:none; }
+  nav summary::-webkit-details-marker { display:none; }
+  nav summary::before { content:"\25B8"; display:inline-block; width:14px; color:#9aa3b8;
+                        transition:.15s; }
+  nav details[open] > summary::before { transform:rotate(90deg); }
+  nav summary:hover { background:#f1f4ff; color:var(--accent); }
+  nav a.l2.solo { font-weight:600; }
+  .navtools { display:flex; gap:6px; margin:0 4px 10px; }
+  .navtools button { flex:1; padding:5px 8px; font-size:12px; }
+  article { flex:1 1 auto; min-width:0; background:#fff; border:1px solid var(--line); border-radius:16px;
+            padding:34px 40px 60px; box-shadow:0 2px 10px rgba(20,30,60,.05); }
+  article h1 { font-size:26px; margin:0 0 6px; padding-bottom:14px; border-bottom:3px solid var(--accent); }
+  article h2 { font-size:21px; margin:44px 0 14px; padding:8px 0 8px 14px; border-left:6px solid var(--accent);
+               background:linear-gradient(90deg,rgba(0,0,0,.035),transparent); border-radius:0 8px 8px 0; }
+  article h1, article h2, article h3 { scroll-margin-top:80px; }
+  article h3 { font-size:17px; margin:26px 0 10px; color:#2a3145; }
+  article p { margin:10px 0; }
+  article strong { color:#111827; }
+  article code { background:#f2f4fa; border:1px solid #e6e9f2; border-radius:5px; padding:1px 5px;
+                 font-family:"Cascadia Mono",Consolas,"Courier New",monospace; font-size:13px; color:#b5305f; }
+  pre { background:#22262f; color:#e6e9f2; border-radius:12px; padding:18px 20px; overflow:auto; line-height:1.6; }
+  pre code { background:none; border:none; color:inherit; padding:0; font-size:13px; }
+  blockquote { margin:16px 0; padding:12px 18px; background:#f4f7ff; border-left:5px solid var(--accent);
+               border-radius:0 10px 10px 0; color:#3d4763; }
+  blockquote p { margin:0; }
+  hr { border:none; border-top:1px dashed var(--line); margin:34px 0; }
+  ul { margin:10px 0; padding-left:0; list-style:none; }
+  li { position:relative; padding:4px 0 4px 20px; }
+  li::before { content:""; position:absolute; left:4px; top:14px; width:6px; height:6px; border-radius:50%;
+               background:var(--accent); opacity:.55; }
+  ol { margin:10px 0; padding-left:34px; }
+  ol li { list-style:decimal; padding:4px 0; }
+  ol li::before { content:none; }
+  .tw { overflow-x:auto; margin:16px 0; border-radius:12px; border:1px solid var(--line); }
+  table { border-collapse:collapse; width:100%; min-width:520px; font-size:14px; }
+  th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:9px 12px;
+           text-align:left; vertical-align:top; }
+  th { background:#f2f5fd; font-weight:600; white-space:nowrap; }
+  tr:last-child td { border-bottom:none; }
+  th:last-child, td:last-child { border-right:none; }
+  tbody tr:hover { background:#fafbff; }
+  #tipbar { display:none; margin:0 0 18px; padding:10px 14px; border-radius:10px; font-size:13px;
+            background:#fff8dc; border:1px solid #f0c419; color:#6b5300; }
+  body.editing #tipbar { display:block; }
+  body.editing #doc { outline:2px dashed #f0c419; outline-offset:16px; border-radius:8px; }
+  body.editing #doc :is(h1,h2,h3,h4):hover,
+  body.editing #doc :is(p,li,td,th):hover { background:#fffbe6; }
+  #doc[contenteditable="true"] { cursor:text; }
+  .banner { max-width:1280px; margin:16px auto -8px; padding:12px 18px; border-radius:12px;
+            font-size:13.5px; line-height:1.7; border:1px solid #d7ddea; background:#f3f6ff; color:#2a3145; }
+  .banner.warn { background:#fff8dc; border-color:#f0c419; color:#6b5300; }
+  .banner button { margin-left:8px; padding:5px 12px; font-size:12.5px; }
+  .banner button.primary { background:#1f6feb; border-color:#1f6feb; color:#fff; }
+  .pagenav { display:flex; gap:6px; flex-wrap:wrap; }
+  .pagenav a { font-size:12.5px; text-decoration:none; color:#3c4356; border:1px solid var(--line);
+               background:#fff; border-radius:9px; padding:6px 11px; }
+  .pagenav a:hover { background:#eef2ff; border-color:#c7d2fe; color:var(--accent); }
+  .pagenav a.cur { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .flash { position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:99;
+           background:#1f2330; color:#fff; padding:10px 18px; border-radius:10px; font-size:13px;
+           box-shadow:0 6px 20px rgba(0,0,0,.25); }
+  #doc a { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(31,111,235,.35); }
+  #doc a:hover { border-bottom-color:var(--accent); }
+  nav a.l4 { padding-left:40px; font-size:11.5px; color:#6b7385; }
+  .fig { margin:18px 0; text-align:center; }
+  .fig img { max-width:100%; height:auto; border:1px solid var(--line); border-radius:10px;
+             background:#fff; }
+  .fig figcaption { margin-top:8px; font-size:13px; color:var(--muted); }
+  #doc pre { position:relative; }
+  .copybtn { position:absolute; top:8px; right:8px; z-index:5; padding:3px 10px; font-size:12px;
+             border-radius:7px; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14);
+             color:#e6e9f2; cursor:pointer; opacity:0; transition:.15s; user-select:none;
+             font-family:inherit; line-height:1.4; }
+  #doc pre:hover .copybtn { opacity:1; }
+  .copybtn:hover { background:rgba(255,255,255,.28); }
+  .copybtn.ok { background:#2e7d32; border-color:#2e7d32; color:#fff; opacity:1; }
+  @media (max-width:900px) { .copybtn { opacity:1; } }
+  @media (max-width:900px) {
+    .wrap { flex-direction:column; padding:16px; }
+    nav { position:static; flex:none; width:100%; max-height:none; }
+    article { padding:22px 18px 40px; }
+  }
+  @media print {
+    body { background:#fff; font-size:11.5pt; }
+    header, nav, .noprint { display:none !important; }
+    .wrap { display:block; max-width:none; padding:0; }
+    article { border:none; box-shadow:none; border-radius:0; padding:0; }
+    article h1 { font-size:20pt; }
+    article h2 { font-size:15pt; margin-top:0; page-break-before:always; page-break-after:avoid; }
+    article h1 + blockquote + hr + h2, article h2:first-of-type { page-break-before:avoid; }
+    article h3 { font-size:12.5pt; page-break-after:avoid; }
+    table, pre, blockquote, li { page-break-inside:avoid; }
+    th { background:#eee; }
+    pre { background:#f4f4f6; color:#111; border:1px solid #ccc; }
+    @page { margin:14mm 12mm; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <b>嵌入式系统设计教案 · 外设与通信</b><small>GPIO · 定时器与PWM · ADC · UART · 单总线 · I2C · SPI · 显示 · 执行器 · 中断 · 看门狗 ｜ 共 7 册</small>
+<div class="pagenav"><a href="00-索引.html">索引</a><a href="01-课程与基础准备.html">01 基础</a><a href="02-外设与通信.html" class="cur">02 外设</a><a href="03-无线与系统.html">03 无线</a><a href="04-小车开发板实验.html">04 小车</a><a href="05-无人机开发板实验.html">05 无人机</a><a href="06-综合项目与迁移.html">06 综合</a><a href="07-附录.html">07 附录</a></div>
+  <span class="sp">
+    <button id="btnEdit" onclick="toggleEdit()">编辑内容</button>
+    <button id="btnSave" onclick="saveLocal()" hidden>保存修改</button>
+    <button id="btnHtml" onclick="exportHTML()">导出 HTML</button>
+    <button id="btnMd" onclick="exportMD()">导出 Markdown</button>
+    <button id="btnReset" onclick="resetDoc()" hidden>恢复原始</button>
+    <button onclick="window.print()">打印 / PDF</button>
+  </span>
+</header>
+<div id="banner" class="banner" style="display:none"></div>
+<div class="wrap">
+  <nav>
+    <h3>目 录</h3>
+    <div class="navtools noprint">
+      <button onclick="document.querySelectorAll('nav details').forEach(d=>d.open=true)">全部展开</button>
+      <button onclick="document.querySelectorAll('nav details').forEach(d=>d.open=false)">全部折叠</button>
+    </div>
+    <details open><summary>七、外设与通信（官方库实现）</summary><a class='l3' href='#7-1-gpio-基础与数字输入输出'>7.1 GPIO 基础与数字输入输出</a><a class='l4' href='#1-gpio-是什么'>1. GPIO 是什么</a><a class='l4' href='#2-输出模式'>2. 输出模式</a><a class='l4' href='#3-输入模式'>3. 输入模式</a><a class='l4' href='#4-上拉与下拉电阻'>4. 上拉与下拉电阻</a><a class='l4' href='#5-电气特性-必须记住的几条'>5. 电气特性（必须记住的几条）</a><a class='l4' href='#6-引脚复用与恢复'>6. 引脚复用与恢复</a><a class='l4' href='#7-引脚掩码与-1ull'>7. 引脚掩码与 `1ULL`</a><a class='l4' href='#8-位运算三件套'>8. 位运算三件套</a><a class='l4' href='#9-常用-api-一览'>9. 常用 API 一览</a><a class='l4' href='#10-注意事项'>10. 注意事项</a><a class='l3' href='#7-2-定时器与-pwm'>7.2 定时器与 PWM</a><a class='l4' href='#7-2-1-通用定时器-gptimer'>7.2.1 通用定时器 GPTimer</a><a class='l4' href='#7-2-2-ledc-硬件-pwm'>7.2.2 LEDC 硬件 PWM</a><a class='l3' href='#7-3-adc-模数转换'>7.3 ADC 模数转换</a><a class='l4' href='#1-原理'>1. 原理</a><a class='l4' href='#2-分辨率'>2. 分辨率</a><a class='l4' href='#3-精度'>3. 精度</a><a class='l4' href='#4-参考电压'>4. 参考电压</a><a class='l4' href='#5-采样-以光敏传感器为例'>5. 采样（以光敏传感器为例）</a><a class='l4' href='#6-常用-api-与调用流程'>6. 常用 API 与调用流程</a><a class='l4' href='#7-提高采样质量的方法'>7. 提高采样质量的方法</a><a class='l4' href='#8-dac-说明'>8. DAC 说明</a><a class='l3' href='#7-4-uart-串口通信'>7.4 UART 串口通信</a><a class='l4' href='#原理'>原理</a><a class='l4' href='#官方-api-用法'>官方 API 用法</a><a class='l4' href='#轮询接收与中断接收'>轮询接收与中断接收</a><a class='l4' href='#数据类型与粘包问题'>数据类型与粘包问题</a><a class='l3' href='#7-5-单总线时序传感器-dht11'>7.5 单总线时序传感器（DHT11）</a><a class='l4' href='#原理-2'>原理</a><a class='l4' href='#官方-api-实现'>官方 API 实现</a><a class='l4' href='#注意事项'>注意事项</a><a class='l3' href='#7-6-i2c-总线'>7.6 I2C 总线</a><a class='l4' href='#原理-3'>原理</a><a class='l4' href='#官方-api-新驱动'>官方 API（新驱动）</a><a class='l4' href='#惯性传感器读取示例-icm20602'>惯性传感器读取示例（ICM20602）</a><a class='l4' href='#常见问题'>常见问题</a><a class='l3' href='#7-7-spi-总线'>7.7 SPI 总线</a><a class='l4' href='#原理-4'>原理</a><a class='l4' href='#官方-api-用法-2'>官方 API 用法</a><a class='l4' href='#传感器读取示例-spl06-001-气压计'>传感器读取示例（SPL06-001 气压计）</a><a class='l4' href='#常见问题-2'>常见问题</a><a class='l3' href='#7-8-显示模块-oled-与-tft'>7.8 显示模块：OLED 与 TFT</a><a class='l4' href='#1-oled-i2c-接口'>1. OLED（I2C 接口）</a><a class='l4' href='#2-tft-彩屏-spi-接口'>2. TFT 彩屏（SPI 接口）</a><a class='l4' href='#3-调试顺序'>3. 调试顺序</a><a class='l3' href='#7-9-执行器驱动'>7.9 执行器驱动</a><a class='l4' href='#1-蜂鸣器'>1. 蜂鸣器</a><a class='l4' href='#2-舵机'>2. 舵机</a><a class='l4' href='#3-驱动电路的三个铁律'>3. 驱动电路的三个铁律</a><a class='l3' href='#7-10-中断'>7.10 中断</a><a class='l4' href='#1-什么是中断'>1. 什么是中断</a><a class='l4' href='#2-为什么需要中断-和轮询对比'>2. 为什么需要中断（和轮询对比）</a><a class='l4' href='#3-中断的四个步骤'>3. 中断的四个步骤</a><a class='l4' href='#4-esp-idf-里怎么写-gpio-中断'>4. ESP-IDF 里怎么写 GPIO 中断</a><a class='l4' href='#5-中断服务函数的三条铁律'>5. 中断服务函数的三条铁律</a><a class='l4' href='#6-中断优先级'>6. 中断优先级</a><a class='l4' href='#7-常见坑'>7. 常见坑</a><a class='l3' href='#7-11-看门狗'>7.11 看门狗</a><a class='l4' href='#1-什么是看门狗'>1. 什么是看门狗</a><a class='l4' href='#2-为什么需要看门狗'>2. 为什么需要看门狗</a><a class='l4' href='#3-esp32-里有两类看门狗'>3. ESP32 里有两类看门狗</a><a class='l4' href='#4-触发时会看到什么'>4. 触发时会看到什么</a><a class='l4' href='#5-什么情况会触发-以及怎么改'>5. 什么情况会触发（以及怎么改）</a><a class='l4' href='#6-怎么用它'>6. 怎么用它</a><a class='l4' href='#7-别和-efuse-搞混'>7. 别和 eFuse 搞混</a></details>
+  </nav>
+  <article id="doc"><h1>嵌入式系统设计教案 · 外设与通信</h1>
+<blockquote><p><strong>教学平台</strong>：ESP32-S3 核心板 · ESP32 智能小车开发板 · ESP32-S3 无人机开发板<br/><strong>软件框架</strong>：ESP-IDF（乐鑫官方框架）<br/><strong>代码说明</strong>：第 1~3、6 册的教学示例只使用 Espressif 官方组件（<code>driver</code> / <code>esp_wifi</code> / <code>esp_ble</code> / <code>esp_http_server</code> / <code>esp_camera</code> / <code>freertos</code>）；第 4、5 册的实验代码取自配套开发板工程，其中包含课程自研组件（<code>icm20602</code>、<code>PMW3901</code>、<code>spl06001</code>、<code>VL53L0X</code> 等）以及电脑端 Qt 上位机程序。</p></blockquote>
+<hr/>
+<h2 id='七-外设与通信-官方库实现'>七、外设与通信（官方库实现）</h2>
+<h3 id='7-1-gpio-基础与数字输入输出'>7.1 GPIO 基础与数字输入输出</h3>
+<h4 id='1-gpio-是什么'>1. GPIO 是什么</h4>
+<p>GPIO 是 General Purpose Input/Output 的缩写，即<strong>通用输入输出</strong>引脚：同一个引脚，既可以配置成输出（去控制别人），也可以配置成输入（去读别人的状态）。</p>
+<p>ESP32-S3 共有 40 余个 GPIO，其中大部分可以复用为外设功能。使用任何一个引脚前，必须先明确三件事：</p>
+<ol><li><strong>方向</strong>：输入还是输出；</li><li><strong>电平</strong>：输出高（1）还是低（0）；</li><li><strong>电气特性</strong>：是否需要上拉／下拉，是否需要开漏。</li></ol>
+<blockquote><p>这三个词先解释一下：<br/><strong>上拉</strong>＝在引脚和电源之间接一个电阻，让引脚默认是<strong>高电平</strong>；<br/><strong>下拉</strong>＝在引脚和地之间接一个电阻，让引脚默认是<strong>低电平</strong>；<br/><strong>开漏</strong>＝引脚只能主动拉低，不能主动输出高电平，想要高电平必须靠外部上拉电阻。</p></blockquote>
+<hr/>
+<h4 id='2-输出模式'>2. 输出模式</h4>
+<p>输出模式分两种：</p>
+<ul><li><strong>推挽输出</strong>：能主动输出高电平，也能主动拉低，驱动能力最强，是最常用的输出方式，用于驱动 LED、继电器、蜂鸣器等。</li><li><strong>开漏输出</strong>：只能主动拉低，输出高电平时引脚处于高阻态，必须依靠<strong>外部上拉电阻</strong>才能得到高电平。I2C 总线必须使用开漏输出，这样多个设备才能共享同一根线而不会互相短路。</li></ul>
+<blockquote><p>完整代码见 <a href="04-小车开发板实验.html#实验一-led-灯点亮实验">第 4 册 · 小车实验一（LED 灯点亮实验）</a></p></blockquote>
+<p>若需要开漏输出，把方向宏换成 <code>GPIO_MODE_OUTPUT_OD</code> 即可，此时高电平必须靠外部上拉电阻提供。</p>
+<hr/>
+<h4 id='3-输入模式'>3. 输入模式</h4>
+<p>输入模式分三种，区别在于<strong>引脚悬空时电平是否确定</strong>：</p>
+<div class='tw'><table><thead><tr><th>模式</th><th>宏定义</th><th>悬空时的电平</th><th>典型用途</th></tr></thead><tbody><tr><td>浮空输入</td><td><code>GPIO_MODE_INPUT</code></td><td>不确定，读数随机跳动</td><td>外部电路已有上下拉</td></tr><tr><td>上拉输入</td><td><code>GPIO_MODE_INPUT_PULLUP</code></td><td>被内部电阻拉到高电平</td><td>按键一端接 GND</td></tr><tr><td>下拉输入</td><td><code>GPIO_MODE_INPUT_PULLDOWN</code></td><td>被内部电阻拉到低电平</td><td>按键一端接 3.3V</td></tr></tbody></table></div>
+<p>按键的使用方式由接线决定：</p>
+<ul><li>按键<strong>一端接引脚、一端接 GND</strong> → 用<strong>上拉输入</strong>，平时读到 1，按下读到 0；</li><li>按键<strong>一端接引脚、一端接 3.3V</strong> → 用<strong>下拉输入</strong>，平时读到 0，按下读到 1。</li></ul>
+<pre><code>#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/gpio.h"
+
+#define KEY_GPIO   GPIO_NUM_4
+
+void key_init(void)
+{
+    gpio_config_t cfg = {
+        .pin_bit_mask = 1ULL &lt;&lt; KEY_GPIO,   // 选中第 4 号引脚（详见第 7 节）
+        .mode         = GPIO_MODE_INPUT,
+        .pull_up_en   = GPIO_PULLUP_ENABLE,     // 打开内部上拉
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type    = GPIO_INTR_DISABLE,
+    };
+    gpio_config(&amp;cfg);
+}
+
+int key_read(void)
+{
+    return gpio_get_level(KEY_GPIO);            // 松开读到 1，按下读到 0
+}
+
+void app_main(void)
+{
+    gpio_set_direction(GPIO_NUM_2, GPIO_MODE_OUTPUT);   /* 指示 LED */
+    key_init();
+
+    while (1)
+    {
+        int level = key_read();
+        gpio_set_level(GPIO_NUM_2, level ? 0 : 1);      /* 按下时点亮 */
+        vTaskDelay(pdMS_TO_TICKS(20));
+    }
+}</code></pre>
+<p><strong>为什么不能随便用浮空输入</strong>：引脚悬空时相当于一根天线，电平随环境变化，程序读到的值在 0 和 1 之间乱跳，看起来像"按键失灵"。只要有按键或开关，就必须给它一个确定的默认电平。</p>
+<hr/>
+<h4 id='4-上拉与下拉电阻'>4. 上拉与下拉电阻</h4>
+<ul><li><strong>上拉电阻</strong>：把引脚默认电平拉到高；<strong>下拉电阻</strong>：把引脚默认电平拉到低。</li><li>ESP32-S3 内部上下拉电阻约为 45kΩ，属于<strong>弱上拉</strong>，只用于"给定默认电平"，<strong>不能用来驱动负载</strong>。</li><li>按键、开关这类"开路／闭合"器件，必须依靠上拉或下拉确定默认状态。</li><li>对上升沿速度有要求的场合（如 I2C 总线在 400kHz 以上），内部弱上拉不够快，必须外接约 <strong>4.7kΩ</strong> 的强上拉。</li></ul>
+<hr/>
+<h4 id='5-电气特性-必须记住的几条'>5. 电气特性（必须记住的几条）</h4>
+<ul><li><strong>高电平约 3.3V，低电平约 0V</strong>，属于 3.3V 逻辑，<strong>严禁把 5V 信号直接接入 GPIO</strong>。</li><li>单个 IO 的输出电流有限（建议不超过 20mA），<strong>不能直接驱动电机、继电器、大功率 LED</strong>，必须通过三极管或 MOS 管。</li><li>驱动继电器、水泵、电机等<strong>感性负载</strong>时，线圈两端必须<strong>并联续流二极管</strong>，用于吸收断电瞬间的反向电动势。</li><li>所有外接模块必须与开发板<strong>共地</strong>，否则电平没有共同参考点，通信会时好时坏。</li></ul>
+<hr/>
+<h4 id='6-引脚复用与恢复'>6. 引脚复用与恢复</h4>
+<ul><li><strong>引脚复用</strong>是指：同一个物理引脚，通过芯片内部的开关可以被不同外设使用 —— 既能当普通 GPIO，也能交给 UART、I2C、SPI、PWM、ADC。但<strong>同一时刻一个引脚只能归一个外设用</strong>。</li><li>一个引脚一旦被外设占用（例如 LEDC 输出 PWM、UART 收发、I2C 的 SDA/SCL），它就不再是"普通 GPIO"，此时仅调用 <code>gpio_set_direction()</code> 是<strong>抢不回来</strong>的。</li><li>需要把它还原成普通 GPIO 时，必须先调用 <code>gpio_reset_pin()</code>：</li></ul>
+<pre><code>#include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+#define LED_GPIO   GPIO_NUM_2
+
+void app_main(void)
+{
+    /* 第一步：把引脚复位，断开之前外设对它的占用 */
+    gpio_reset_pin(LED_GPIO);
+
+    /* 第二步：重新配置成普通输出 */
+    gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
+
+    /* 第三步：正常点灯 */
+    while (1)
+    {
+        gpio_set_level(LED_GPIO, 1);
+        vTaskDelay(pdMS_TO_TICKS(500));
+        gpio_set_level(LED_GPIO, 0);
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+}</code></pre>
+<p><code>gpio_reset_pin()</code> 的实际作用是：关闭中断、打开内部上拉、关闭下拉、关闭输入与输出、把引脚切换回普通 GPIO 功能，并释放外设对该引脚的占用。</p>
+<p><strong>什么时候必须调用它</strong>：</p>
+<ol><li>该引脚之前被 LEDC／UART／I2C／SPI／ADC 等外设使用过，现在要当普通 GPIO 用；</li><li>同一个引脚在不同实验之间反复改变用途；</li><li>需要让引脚回到一个确定状态。</li></ol>
+<p>典型的踩坑现象是：代码编译通过、<code>gpio_set_level()</code> 也调用了，但引脚电平始终不变 —— 原因就是引脚还被外设占着，没有复位。</p>
+<p><strong>注意</strong>：只做普通的输出控制（例如点亮 LED）时，<code>gpio_set_direction()</code> 已经足够，<code>gpio_reset_pin()</code> 可以省略。</p>
+<hr/>
+<h4 id='7-引脚掩码与-1ull'>7. 引脚掩码与 <code>1ULL</code></h4>
+<p><code>gpio_config()</code> 允许<strong>一次配置多个引脚</strong>，靠的就是"位掩码"：</p>
+<pre><code>#include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+void app_main(void)
+{
+    /* 只配置第 4 号引脚 */
+    gpio_config_t cfg = {
+        .pin_bit_mask = 1ULL &lt;&lt; 4,
+        .mode         = GPIO_MODE_OUTPUT,
+        .pull_up_en   = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type    = GPIO_INTR_DISABLE,
+    };
+    gpio_config(&amp;cfg);
+
+    /* 同时配置第 4 号和第 42 号引脚，用按位或组合 */
+    gpio_config_t cfg2 = {
+        .pin_bit_mask = (1ULL &lt;&lt; 4) | (1ULL &lt;&lt; 42),
+        .mode         = GPIO_MODE_OUTPUT,
+        .pull_up_en   = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type    = GPIO_INTR_DISABLE,
+    };
+    gpio_config(&amp;cfg2);
+
+    while (1)
+    {
+        gpio_set_level(GPIO_NUM_4, 1);
+        gpio_set_level(GPIO_NUM_42, 1);
+        vTaskDelay(pdMS_TO_TICKS(500));
+
+        gpio_set_level(GPIO_NUM_4, 0);
+        gpio_set_level(GPIO_NUM_42, 0);
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+}</code></pre>
+<p><strong>几句话记住它</strong>：</p>
+<ul><li><code>pin_bit_mask</code> 的类型是 <strong>64 位无符号整数</strong>（<code>uint64_t</code>），<strong>每一位对应一个引脚</strong>：第 n 位置 1，就表示要配置第 n 号引脚；</li><li><code>1ULL &lt;&lt; n</code> 的作用是把 1 左移到第 n 位，也就是"选中第 n 号引脚"；</li><li>后缀 <strong><code>ULL</code> 表示"无符号长长整型"，即 64 位</strong> —— ESP32-S3 的引脚号可以超过 31（例如 42），32 位装不下，所以必须写 <code>ULL</code>；</li><li><strong>写成 <code>1 &lt;&lt; 42</code> 会出错</strong>：左移位数超过了 32 位整数的宽度，结果不确定，引脚实际上没有被配置，而且<strong>编译不会报错</strong>，现象就是"代码没问题但灯不亮"；</li><li>ESP-IDF 提供的宏 <code>BIT64(n)</code> 完全等价于 <code>1ULL &lt;&lt; n</code>，写 <code>BIT64(42)</code> 语义更清楚。</li></ul>
+<p><strong>结论</strong>：凡是给 <code>pin_bit_mask</code> 赋值，统一写成 <code>1ULL &lt;&lt; 引脚号</code>，多个引脚用 <code>|</code> 连接。</p>
+<hr/>
+<h4 id='8-位运算三件套'>8. 位运算三件套</h4>
+<div class='tw'><table><thead><tr><th>操作</th><th>写法</th><th>用途</th></tr></thead><tbody><tr><td>置位（打开某一位）</td><td>`x = x</td><td>(1 &lt;&lt; n)`</td><td>打开使能、设置标志</td></tr><tr><td>清零（关闭某一位）</td><td><code>x = x &amp; ~(1 &lt;&lt; n)</code></td><td>关闭某一位</td></tr><tr><td>取位（判断某一位）</td><td><code>if (x &amp; (1 &lt;&lt; n))</code></td><td>读状态寄存器、判断标志位</td></tr></tbody></table></div>
+<p>例如判断数据的最高位（第 7 位）是否为 1，以下两种写法等价：</p>
+<pre><code>#include "esp_log.h"
+
+static const char *TAG = "bit";
+
+void app_main(void)
+{
+    unsigned char value = 0;                    /* 一个 8 位的数 */
+
+    /* 1. 置位：把第 0 位和第 2 位变成 1 */
+    value = value | (1 &lt;&lt; 0);
+    value = value | (1 &lt;&lt; 2);
+    ESP_LOGI(TAG, "after set   : 0x%02X", value);      /* 0x05 */
+
+    /* 2. 取位：判断第 2 位是不是 1 */
+    if (value &amp; (1 &lt;&lt; 2))
+    {
+        ESP_LOGI(TAG, "bit 2 is 1");
+    }
+
+    /* 3. 清零：把第 0 位变回 0 */
+    value = value &amp; ~(1 &lt;&lt; 0);
+    ESP_LOGI(TAG, "after clear : 0x%02X", value);      /* 0x04 */
+}</code></pre>
+<hr/>
+<h4 id='9-常用-api-一览'>9. 常用 API 一览</h4>
+<div class='tw'><table><thead><tr><th>功能</th><th>接口</th><th>说明</th></tr></thead><tbody><tr><td>设置方向</td><td><code>gpio_set_direction(引脚, 模式)</code></td><td>单独配置一个引脚的方向</td></tr><tr><td>批量配置</td><td><code>gpio_config(&amp;cfg)</code></td><td>一次配置方向、上下拉、中断</td></tr><tr><td>输出电平</td><td><code>gpio_set_level(引脚, 0/1)</code></td><td>写 1 输出高，写 0 输出低</td></tr><tr><td>读取电平</td><td><code>gpio_get_level(引脚)</code></td><td>返回 0 或 1</td></tr><tr><td>单独设置上下拉</td><td><code>gpio_set_pull_mode(引脚, 模式)</code></td><td>上拉／下拉／浮空</td></tr><tr><td>复位引脚</td><td><code>gpio_reset_pin(引脚)</code></td><td>恢复默认状态，释放外设占用</td></tr></tbody></table></div>
+<p><strong>调用流程</strong></p>
+<div class='tw'><table><thead><tr><th>步骤</th><th>调用</th><th>作用</th></tr></thead><tbody><tr><td>1 配置一次</td><td><code>gpio_config(&amp;cfg)</code></td><td>一次把方向、上下拉、中断方式都配好</td></tr><tr><td>2 反复使用</td><td><code>gpio_set_level()</code> / <code>gpio_get_level()</code></td><td>写电平、读电平，写在循环里</td></tr><tr><td>3 用完复位</td><td><code>gpio_reset_pin(引脚)</code></td><td>换用途前把引脚还原成默认状态</td></tr></tbody></table></div>
+<blockquote><p>必须做的只有前两步：<strong>先配置一次，再反复使用</strong>。GPIO 不需要创建句柄，也没有"用完删除"这一步。</p></blockquote>
+<hr/>
+<h4 id='10-注意事项'>10. 注意事项</h4>
+<ul><li><code>GPIO_NUM_0</code>、<code>GPIO_NUM_45</code>、<code>GPIO_NUM_46</code> 属于启动配置引脚（strapping pin —— 芯片上电时会先读这几个引脚的电平，决定从哪里启动），外接电路会改变它的电平、影响启动，使用前需确认电路，<strong>课程实验建议避开</strong>。</li><li>输出 <code>1</code> 表示 3.3V，输出 <code>0</code> 表示 0V；务必先确认外接模块是<strong>高电平点亮</strong>还是<strong>低电平点亮</strong>。</li><li>输入引脚必须确定默认电平（上拉或下拉），不要悬空。</li><li>给引脚掩码赋值统一使用 <code>1ULL &lt;&lt; n</code>，不要写成 <code>1 &lt;&lt; n</code>。</li><li>复用被外设占用过的引脚时，先调用 <code>gpio_reset_pin()</code>。</li></ul>
+<hr/>
+<h3 id='7-2-定时器与-pwm'>7.2 定时器与 PWM</h3>
+<p><strong>先把名词说清楚</strong></p>
+<div class='tw'><table><thead><tr><th>名词</th><th>英文</th><th>含义</th></tr></thead><tbody><tr><td>PWM</td><td>Pulse Width Modulation</td><td>脉冲宽度调制。用"开关的时间比例"去等效控制模拟量，是数字电路控制亮度、转速、角度的通用手段</td></tr><tr><td>周期</td><td>Period（T）</td><td>一个完整"高电平 + 低电平"过程所用的时间</td></tr><tr><td>频率</td><td>Frequency（f）</td><td>每秒完成多少个周期，<code>f = 1 / T</code>，单位 Hz</td></tr><tr><td>脉宽</td><td>Pulse Width（t_on）</td><td>一个周期内<strong>高电平持续的时间</strong></td></tr><tr><td>占空比</td><td>Duty Cycle（D）</td><td>高电平时间占整个周期的比例，<code>D = t_on / T</code>，常用百分数表示</td></tr><tr><td>等效平均电压</td><td>Average Voltage</td><td><code>U_avg = D × U</code>。占空比越大，等效电压越高，灯越亮、电机越快</td></tr><tr><td>占空比分辨率</td><td>Duty Resolution</td><td>占空比能分成多少档，由位数决定：n 位 → <code>2^n</code> 档，取值范围 <code>0 ~ 2^n − 1</code></td></tr><tr><td>定时器</td><td>Timer</td><td>LEDC 中负责产生"节奏"的单元，<strong>决定频率与分辨率</strong></td></tr><tr><td>通道</td><td>Channel</td><td>LEDC 中负责输出波形的单元，<strong>绑定引脚与占空比</strong></td></tr><tr><td>相位偏移</td><td>hpoint</td><td>指定高电平在一个周期内的起始位置，用于多个通道错开相位</td></tr><tr><td>互补输出</td><td>Complementary Output</td><td>两路反相的波形，用于 H 桥驱动电机（H 桥：四个开关组成的电路，能让电机正转和反转）</td></tr><tr><td>死区时间</td><td>Dead Time</td><td>互补输出切换瞬间插入的空白时间，防止上下两个开关管同时导通而短路</td></tr><tr><td>低速 / 高速模式</td><td>Low / High Speed Mode</td><td>LEDC 的两种工作模式，低速模式引脚分配更灵活，课程中统一使用低速模式</td></tr></tbody></table></div>
+<p><strong>理解 PWM 只需要三句话</strong></p>
+<ol><li><strong>周期定"多久一次"</strong>，频率是它的倒数 —— 周期越短，频率越高。</li><li><strong>占空比定"开多久"</strong>，它决定等效平均电压 —— 占空比越大，输出功率越高。</li><li><strong>占空比分辨率定"能调多细"</strong>，由位数决定 —— 位数越高，亮度或转速的调节越平滑。</li></ol>
+<p><strong>关键：频率与分辨率互相制约</strong></p>
+<p>LEDC 的时钟源频率是固定的（APB 总线 80MHz），因此：</p>
+<pre><code>输出频率 = 时钟源频率 ÷ (分频系数 × 2^占空比位数)</code></pre>
+<p>也就是说，<strong>想要更高的占空比分辨率（调得更细），就必须牺牲最高频率</strong>：</p>
+<div class='tw'><table><thead><tr><th>占空比位数</th><th>占空比档数</th><th>可达到的最高频率（约）</th><th>典型用途</th></tr></thead><tbody><tr><td>8 位</td><td>256</td><td>312 kHz</td><td>电机调速、小功率调光</td></tr><tr><td>10 位</td><td>1024</td><td>78 kHz</td><td>LED 调光</td></tr><tr><td>12 位</td><td>4096</td><td>19.5 kHz</td><td>高精度调光</td></tr><tr><td>13 位</td><td>8192</td><td>9.7 kHz</td><td>兼顾精度与频率</td></tr><tr><td>14 位</td><td>16384</td><td>4.9 kHz</td><td>舵机（需要精确的脉宽）</td></tr></tbody></table></div>
+<p><strong>占空比数值怎么算</strong></p>
+<pre><code>duty = 占空比 × 2^位数</code></pre>
+<div class='tw'><table><thead><tr><th>位数</th><th>想要 50% 占空比</th><th>想要 30% 占空比</th></tr></thead><tbody><tr><td>8 位</td><td><code>0.5 × 256 = 128</code></td><td><code>0.3 × 256 ≈ 77</code></td></tr><tr><td>10 位</td><td><code>0.5 × 1024 = 512</code></td><td><code>0.3 × 1024 ≈ 307</code></td></tr><tr><td>14 位</td><td><code>0.5 × 16384 = 8192</code></td><td><code>0.3 × 16384 ≈ 4915</code></td></tr></tbody></table></div>
+<p><strong>舵机的占空比</strong>：舵机周期固定 20ms（50Hz），1.5ms 对应 90°，占空比 <code>1.5 / 20 = 7.5%</code>；用 14 位分辨率时，<code>duty = 0.075 × 16384 ≈ 1229</code>。</p>
+<hr/>
+<h4 id='7-2-1-通用定时器-gptimer'>7.2.1 通用定时器 GPTimer</h4>
+<p><strong>原理</strong>：ESP32-S3 内置通用定时器，可设置时钟源、计数方向与分辨率。定时器计数值达到 <code>alarm_count</code> 时触发闹钟事件，配合自动重载即可实现精确定时。中断回调运行在中断上下文，耗时操作应交给任务处理。</p>
+<blockquote><p>完整代码见 <a href="04-小车开发板实验.html#实验二-esp32-定时器实验">第 4 册 · 小车实验二（ESP32 定时器实验）</a></p></blockquote>
+<ul><li><code>resolution_hz = 1000000</code> 表示 1 个计数单位等于 1 微秒，便于换算。</li><li><code>auto_reload_on_alarm = true</code> 使定时器周期触发；置为 <code>false</code> 则只触发一次。</li></ul>
+<blockquote><p>中断回调里只适合做"记下时间到了"这件事，真正的处理放到任务里做，理由见 <a href="03-无线与系统.html#12-中断配合规范">第 3 册 · 8.4 节「中断配合规范」</a>。</p></blockquote>
+<p><strong>常用 API 与调用流程</strong></p>
+<div class='tw'><table><thead><tr><th>步骤</th><th>调用</th><th>作用</th></tr></thead><tbody><tr><td>1 创建</td><td><code>gptimer_new_timer(&amp;cfg, &amp;timer)</code></td><td>按配置建一个定时器，拿回句柄</td></tr><tr><td>2 设闹钟</td><td><code>gptimer_set_alarm_action(timer, &amp;alarm)</code></td><td>计数值到 <code>alarm_count</code> 时触发，并决定是否自动重载</td></tr><tr><td>3 挂回调</td><td><code>gptimer_register_event_callbacks(timer, &amp;cbs, NULL)</code></td><td>到点时自动去调用哪个函数</td></tr><tr><td>4 使能</td><td><code>gptimer_enable(timer)</code></td><td>让定时器能工作；漏掉这一步，启动了也不会触发</td></tr><tr><td>5 启动</td><td><code>gptimer_start(timer)</code></td><td>开始计数；要暂停用 <code>gptimer_stop()</code></td></tr></tbody></table></div>
+<blockquote><p>顺序是 <strong>建 → 设 → 挂 → 使能 → 启动</strong>。前四步各做一次，之后到点自动进回调，不用再管它。</p></blockquote>
+<hr/>
+<h4 id='7-2-2-ledc-硬件-pwm'>7.2.2 LEDC 硬件 PWM</h4>
+<p><strong>原理</strong>：LEDC 是硬件 PWM 外设，不占用 CPU。频率与占空比分辨率相互制约：分辨率位数为 <code>n</code> 时，占空比范围为 <code>0 ~ 2^n - 1</code>；频率越高，可用的分辨率位数越低。</p>
+<pre><code>#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/ledc.h"
+
+#define PWM_GPIO      GPIO_NUM_2
+#define PWM_TIMER     LEDC_TIMER_0
+#define PWM_CHANNEL   LEDC_CHANNEL_0
+
+void pwm_init(void)
+{
+    ledc_timer_config_t timer = {
+        .speed_mode      = LEDC_LOW_SPEED_MODE,
+        .timer_num       = PWM_TIMER,
+        .duty_resolution = LEDC_TIMER_10_BIT,   // 占空比范围 0 ~ 1023
+        .freq_hz         = 5000,
+        .clk_cfg         = LEDC_AUTO_CLK,
+    };
+    ledc_timer_config(&amp;timer);
+
+    ledc_channel_config_t ch = {
+        .gpio_num   = PWM_GPIO,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .channel    = PWM_CHANNEL,
+        .timer_sel  = PWM_TIMER,
+        .duty       = 0,
+        .hpoint     = 0,
+    };
+    ledc_channel_config(&amp;ch);
+}
+
+void pwm_set_duty(int duty)          // duty: 0 ~ 1023
+{
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, PWM_CHANNEL, duty);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, PWM_CHANNEL);
+}
+
+void app_main(void)
+{
+    pwm_init();
+
+    while (1)
+    {
+        for (int duty = 0; duty &lt;= 1023; duty = duty + 16)   /* 渐亮 */
+        {
+            pwm_set_duty(duty);
+            vTaskDelay(pdMS_TO_TICKS(20));
+        }
+
+        for (int duty = 1023; duty &gt;= 0; duty = duty - 16)   /* 渐暗 */
+        {
+            pwm_set_duty(duty);
+            vTaskDelay(pdMS_TO_TICKS(20));
+        }
+    }
+}</code></pre>
+<p><strong>关键点</strong>：调用 <code>ledc_set_duty()</code> 之后必须调用 <code>ledc_update_duty()</code>，新占空比才会生效。</p>
+<p><strong>舵机控制参数</strong>：舵机要求 50Hz 周期（20ms），高电平 0.5ms 对应 0°、1.5ms 对应 90°、2.5ms 对应 180°。使用 14 位分辨率（0~16383）时，对应占空比约为 410、1229、2048。</p>
+<hr/>
+<p><strong>常用 API 与调用流程</strong></p>
+<div class='tw'><table><thead><tr><th>步骤</th><th>调用</th><th>作用</th></tr></thead><tbody><tr><td>1 配定时器</td><td><code>ledc_timer_config(&amp;timer)</code></td><td>定频率与占空比位数（决定"节奏"）</td></tr><tr><td>2 配通道</td><td><code>ledc_channel_config(&amp;ch)</code></td><td>把定时器绑到引脚上，并给出初始占空比</td></tr><tr><td>3 改占空比</td><td><code>ledc_set_duty()</code> + <code>ledc_update_duty()</code></td><td>运行时调亮度、转速、角度；两句必须一起写</td></tr></tbody></table></div>
+<blockquote><p>第 1、2 步只在初始化时各做一次，第 3 步才是写在循环里的那一步。</p></blockquote>
+<hr/>
+<h3 id='7-3-adc-模数转换'>7.3 ADC 模数转换</h3>
+<p><strong>先把名词说清楚</strong></p>
+<div class='tw'><table><thead><tr><th>名词</th><th>英文</th><th>含义</th></tr></thead><tbody><tr><td>模拟量</td><td>Analog</td><td>连续变化的量，如电压、电流、温度、光照强度</td></tr><tr><td>数字量</td><td>Digital</td><td>用有限个离散数字表示的量，如 0 ~ 4095</td></tr><tr><td>ADC</td><td>Analog-to-Digital Converter</td><td><strong>模数转换器</strong>，把模拟电压转换成数字量</td></tr><tr><td>DAC</td><td>Digital-to-Analog Converter</td><td><strong>数模转换器</strong>，把数字量转换成模拟电压</td></tr><tr><td>采样</td><td>Sampling</td><td>在某一时刻取一次输入电压的动作</td></tr><tr><td>采样率</td><td>Sample Rate</td><td>每秒采样的次数，单位 Hz。如 1kHz 表示每秒采 1000 次</td></tr><tr><td>采样保持</td><td>Sample and Hold</td><td>采样瞬间把电压存到内部电容上并保持住，供转换期间使用</td></tr><tr><td>量化</td><td>Quantization</td><td>把连续电压归到最接近的刻度上</td></tr><tr><td>量化误差</td><td>Quantization Error</td><td>真实电压与量化结果之间的差，最大为 ±0.5 个 LSB</td></tr><tr><td>位数</td><td>Bit / Resolution</td><td>ADC 的精度等级，12 位表示有 12 个二进制位</td></tr><tr><td>分辨率</td><td>Resolution</td><td>能分辨的最小电压变化，<code>满量程 ÷ 2^位数</code></td></tr><tr><td>LSB</td><td>Least Significant Bit</td><td><strong>最低有效位</strong>，常用来表示"一个刻度"对应的电压值</td></tr><tr><td>满量程</td><td>Full Scale</td><td>当前档位能测量的最大电压</td></tr><tr><td>参考电压</td><td>Vref</td><td>转换所用的基准电压，ESP32-S3 内部约 1.1V</td></tr><tr><td>衰减</td><td>Attenuation</td><td>把量程放大的档位设置，共四档</td></tr><tr><td>逐次逼近</td><td>SAR</td><td>Successive Approximation Register，用二分法逐位试探的转换结构</td></tr><tr><td>通道</td><td>Channel</td><td>一个可独立采样的输入引脚（ADC1_CH0 ~ CH9）</td></tr><tr><td>单次 / 连续转换</td><td>One-shot / Continuous</td><td>采一次就停 / 不停地连续采样</td></tr><tr><td>有效位数</td><td>ENOB</td><td>Effective Number of Bits，扣除噪声后<strong>实际可用</strong>的位数</td></tr><tr><td>校准</td><td>Calibration</td><td>用已知电压修正读数偏差，提高准确性</td></tr><tr><td>滤波</td><td>Filtering</td><td>对多次采样结果做处理，抑制随机噪声</td></tr><tr><td>积分非线性</td><td>INL</td><td>实际转换曲线与理想直线的最大偏差</td></tr><tr><td>微分非线性</td><td>DNL</td><td>每个刻度宽度的不均匀程度</td></tr></tbody></table></div>
+<p><strong>最容易混的两个词：分辨率 与 精度</strong></p>
+<ul><li><strong>分辨率</strong>回答"能分到多细" —— 由位数决定，是硬件固定的。</li><li><strong>精度</strong>回答"分得准不准" —— 由噪声、温漂、参考电压、电路布局决定。</li></ul>
+<p>一块 12 位 ADC 在噪声较大的电路上，实际有效精度可能只有 9 ~ 10 位。<strong>位数买不来精度，电路和滤波才能。</strong></p>
+<hr/>
+<h4 id='1-原理'>1. 原理</h4>
+<p><strong>ADC（Analog to Digital Converter，模数转换器）</strong> 负责把连续变化的模拟电压转换成离散的数字量，是单片机读取电位器、光敏电阻、温敏电阻、电池电压等模拟量传感器的唯一途径。</p>
+<p>ESP32-S3 内置的 ADC 为 <strong>12 位逐次逼近型（SAR）</strong>。一次完整的转换包含四个步骤：</p>
+<div class='tw'><table><thead><tr><th>步骤</th><th>做什么</th><th>说明</th></tr></thead><tbody><tr><td>采样</td><td>把输入电压接到内部采样电容上</td><td>需要一定的采样时间，输入阻抗过大会采不准</td></tr><tr><td>保持</td><td>断开输入，保持住这个电压</td><td>转换期间电压不能变</td></tr><tr><td>量化</td><td>与内部参考电压逐次比较、二分逼近</td><td>12 位需要比较 12 次</td></tr><tr><td>编码</td><td>输出对应的数字量</td><td>结果范围 0 ~ 4095</td></tr></tbody></table></div>
+<p><strong>逐次逼近的工作方式</strong>：先从最高位开始试探 —— 取满量程的一半与输入比较，大就保留这一位，小就清零，然后对下一位重复同样的动作。12 次比较后即得到 12 位结果，因此转换速度与位数成正比。</p>
+<p><strong>关于采样率</strong>：ADC 完成一次转换需要一定时间，因此每秒能采样的次数有限。根据奈奎斯特定理，要完整还原一个变化的信号，采样率必须<strong>高于信号最高频率的两倍</strong>。这也是为什么采样电位器、光敏这类"缓变信号"时 1kHz 绰绰有余，而采样音频信号就需要专门的 I2S ADC。</p>
+<h4 id='2-分辨率'>2. 分辨率</h4>
+<p><strong>分辨率</strong>表示 ADC 能把量程"切成多少份"，由位数决定：</p>
+<pre><code>刻度数 = 2^位数          12 位 → 2^12 = 4096 个刻度
+输出范围 = 0 ~ (2^位数 − 1)   12 位 → 0 ~ 4095</code></pre>
+<p><strong>最小可分辨电压（1 个 LSB）</strong> = 满量程 ÷ 4096。不同衰减档位下的对应关系：</p>
+<div class='tw'><table><thead><tr><th>衰减档位</th><th>约满量程</th><th>1 LSB 对应电压</th><th>适合测量</th></tr></thead><tbody><tr><td><code>ADC_ATTEN_DB_0</code></td><td>950mV</td><td>约 0.23mV</td><td>小信号、精密传感器</td></tr><tr><td><code>ADC_ATTEN_DB_2_5</code></td><td>1250mV</td><td>约 0.31mV</td><td>中等幅度信号</td></tr><tr><td><code>ADC_ATTEN_DB_6</code></td><td>1750mV</td><td>约 0.43mV</td><td>一般模拟量</td></tr><tr><td><code>ADC_ATTEN_DB_12</code></td><td>2450mV</td><td>约 0.60mV</td><td>光敏、分压电路（最常用）</td></tr></tbody></table></div>
+<p><strong>分辨率不是越大越好</strong>：位数越高，1 LSB 越小，但同时也更容易被噪声淹没 —— 这是下面"精度"要解决的问题。</p>
+<h4 id='3-精度'>3. 精度</h4>
+<p><strong>精度</strong>表示读出来的数值<strong>与真实电压的接近程度</strong>，与分辨率是两个完全不同的概念。</p>
+<div class='tw'><table><thead><tr><th>概念</th><th>回答的问题</th><th>由什么决定</th></tr></thead><tbody><tr><td>分辨率</td><td>能分到多细</td><td>位数（硬件固定 12 位）</td></tr><tr><td>精度</td><td>分得准不准</td><td>噪声、温漂、参考电压、输入阻抗、电路布局</td></tr></tbody></table></div>
+<p><strong>关键结论：分辨率高不等于精度高。</strong> 一块 12 位 ADC 在噪声较大的电路上，实际有效精度可能只有 9 ~ 10 位（业内称为 <strong>ENOB，有效位数</strong>）。也就是说，即使最小刻度是 0.6mV，读数也可能上下跳动几十毫伏。</p>
+<p><strong>误差来源与对策</strong>：</p>
+<div class='tw'><table><thead><tr><th>误差来源</th><th>现象</th><th>对策</th></tr></thead><tbody><tr><td>电源与地噪声</td><td>读数无规律跳动</td><td>输入端并联 0.1μF 电容，缩短引线，加强接地</td></tr><tr><td>输入阻抗过大</td><td>读数偏低、不随信号变化</td><td>用电压跟随器隔离，或降低分压电阻阻值</td></tr><tr><td>参考电压偏差</td><td>整体读数偏移</td><td>用万用表实测实际电压做校准系数</td></tr><tr><td>温度漂移</td><td>冷机与热机读数不同</td><td>关键场合做温度补偿</td></tr><tr><td>非线性</td><td>某一区间误差偏大</td><td>多点标定，查表修正</td></tr><tr><td>采样过快</td><td>读数互相干扰</td><td>两次采样之间留出足够间隔</td></tr></tbody></table></div>
+<p><strong>怎么实测精度</strong>（课堂必做的基本功训练）：</p>
+<ol><li>用万用表量出实际电压，记下来；</li><li>同时记录程序打印的 ADC 原始值与换算电压；</li><li>两者相减得到绝对误差，再除以真实值得到相对误差；</li><li>连续测 10 组，观察误差是否稳定 —— <strong>误差稳定可以校准，误差乱跳只能靠滤波和改电路</strong>。</li></ol>
+<h4 id='4-参考电压'>4. 参考电压</h4>
+<p>ADC 的换算基准来自内部参考电压，ESP32-S3 的内部参考电压约为 <strong>1.1V</strong>，且<strong>没有引出外部 Vref 引脚</strong>，无法外接精密基准。</p>
+<p>要测量更大的电压，只能通过<strong>衰减档位</strong>把量程放大：</p>
+<div class='tw'><table><thead><tr><th>衰减档位</th><th>约可用量程</th><th>说明</th></tr></thead><tbody><tr><td><code>ADC_ATTEN_DB_0</code></td><td>0 ~ 950mV</td><td>不衰减</td></tr><tr><td><code>ADC_ATTEN_DB_2_5</code></td><td>0 ~ 1250mV</td><td>约 2.5dB 衰减</td></tr><tr><td><code>ADC_ATTEN_DB_6</code></td><td>0 ~ 1750mV</td><td>约 6dB 衰减</td></tr><tr><td><code>ADC_ATTEN_DB_12</code></td><td>0 ~ 2450mV</td><td>约 12dB 衰减，最常用</td></tr></tbody></table></div>
+<p><strong>电压换算公式</strong>：</p>
+<pre><code>电压(mV) = 原始值 × 满量程(mV) ÷ 4095</code></pre>
+<p><strong>注意两点</strong>：</p>
+<ul><li>换算时必须使用<strong>当前档位对应的满量程</strong>，用错档位数值会整体偏差；</li><li>测量 3.3V 以上的电压必须先用电阻<strong>分压</strong>，绝不能直接接入引脚。</li></ul>
+<p><strong>关于 ADC2</strong>：ADC2 与 WiFi <strong>共用同一组硬件资源</strong>，WiFi 工作时会把 ADC2 占住，所以启用 WiFi 后 ADC2 不可用。这不是软件 bug，而是芯片设计如此 —— <strong>联网项目必须使用 ADC1</strong>。</p>
+<h4 id='5-采样-以光敏传感器为例'>5. 采样（以光敏传感器为例）</h4>
+<p>光敏电阻的阻值随光照强度变化。要把它变成电压，需要一个<strong>分压电路</strong>：</p>
+<pre><code>3.3V ──[ 光敏电阻 ]──┬──[ 固定电阻 10kΩ ]── GND
+                     │
+                   接 ADC 引脚</code></pre>
+<p>光照增强 → 光敏电阻阻值减小 → 分压点电压升高 → ADC 读数变大。</p>
+<blockquote><p>完整代码见 <a href="04-小车开发板实验.html#实验四-光敏-adc-采集实验">第 4 册 · 小车实验四（光敏 ADC 采集实验）</a></p></blockquote>
+<p><strong>实验现象</strong>：用手遮挡光敏电阻时读数明显下降，强光照射时读数上升；读数应在 0 ~ 4095 之间平滑变化，不应出现大幅跳变。</p>
+<h4 id='6-常用-api-与调用流程'>6. 常用 API 与调用流程</h4>
+<div class='tw'><table><thead><tr><th>步骤</th><th>调用</th><th>作用</th></tr></thead><tbody><tr><td>1 建单元</td><td><code>adc_oneshot_new_unit(&amp;unit_cfg, &amp;adc_unit)</code></td><td>选好用哪一路 ADC，拿回句柄</td></tr><tr><td>2 配通道</td><td><code>adc_oneshot_config_channel(adc_unit, 通道, &amp;chan_cfg)</code></td><td>指定引脚，并用 <code>atten</code> 设置量程</td></tr><tr><td>3 读一次</td><td><code>adc_oneshot_read(adc_unit, 通道, &amp;raw)</code></td><td>读回原始值，范围 <code>0 ~ 4095</code></td></tr><tr><td>4 换算</td><td><code>raw / 4095.0f * 3.3f</code></td><td>把原始值换算成电压（V）</td></tr></tbody></table></div>
+<blockquote><p>第 1、2 步初始化时各做一次，第 3 步就是循环里反复调用的那一步。读回来的是<strong>原始值，不是电压</strong>，要自己按第 4 步换算。</p></blockquote>
+<h4 id='7-提高采样质量的方法'>7. 提高采样质量的方法</h4>
+<div class='tw'><table><thead><tr><th>方法</th><th>做法</th><th>适用场景</th></tr></thead><tbody><tr><td>多次采样取平均</td><td>连续读取 8 ~ 16 次后求平均值</td><td>抑制随机噪声</td></tr><tr><td>滑动平均</td><td>维护最近 N 次采样的平均值</td><td>兼顾平滑与响应速度</td></tr><tr><td>中值滤波</td><td>对 N 次采样排序取中间值</td><td>剔除脉冲干扰</td></tr><tr><td>硬件滤波</td><td>输入端并联 0.1μF 电容，缩短引线，加强接地</td><td>从源头上减小噪声</td></tr></tbody></table></div>
+<p><strong>三种滤波的取舍</strong>：均值滤波最平滑但响应慢；中值滤波抗脉冲最好但需要排序；滑动平均折中。实际使用时可以组合，例如"先去极值再取平均"。</p>
+<h4 id='8-dac-说明'>8. DAC 说明</h4>
+<p><strong>DAC（Digital to Analog Converter，数模转换器）</strong> 与 ADC 相反，用于把数字量转换为模拟电压输出，可直接输出任意波形或设定电压。</p>
+<p><strong>芯片差异</strong>：经典 ESP32 内置 2 路 8 位 DAC（GPIO25 / GPIO26），而 <strong>ESP32-S3 取消了内置 DAC</strong>。在 ESP32-S3 上需要模拟输出时，采用以下方式：</p>
+<div class='tw'><table><thead><tr><th>方法</th><th>原理</th><th>适用场合</th></tr></thead><tbody><tr><td>PWM + RC 低通滤波</td><td>用占空比等效平均电压，经 RC 滤波得到平滑电压</td><td>精度要求不高的设定电压</td></tr><tr><td>外接 SPI / I2C DAC 芯片</td><td>通过总线发送数字量，由专用芯片输出模拟电压</td><td>需要较高精度或高速波形</td></tr><tr><td>I2S + 音频 DAC</td><td>由 I2S 外设输出数字音频流</td><td>播放音频</td></tr></tbody></table></div>
+<p><strong>典型应用</strong>：设定基准电压、产生低频波形、控制模拟调光与模拟量输出模块。</p>
+<hr/>
+<h3 id='7-4-uart-串口通信'>7.4 UART 串口通信</h3>
+<h4 id='原理'>原理</h4>
+<p>UART 为异步串行通信，两端必须约定相同的<strong>波特率、数据位、校验位与停止位</strong>，并且必须共地。</p>
+<div class='tw'><table><thead><tr><th>参数</th><th>含义</th><th>常用值</th></tr></thead><tbody><tr><td>波特率</td><td>每秒传输多少位</td><td>9600 / 115200</td></tr><tr><td>数据位</td><td>一个字符用几位表示</td><td>8 位</td></tr><tr><td>校验位</td><td>用于发现传输错误的附加位</td><td>不用（None）</td></tr><tr><td>停止位</td><td>一个字符结束的标志</td><td>1 位</td></tr></tbody></table></div>
+<p><strong>"异步"是什么意思</strong>：UART 没有单独的时钟线，接收方全靠<strong>约定的波特率</strong>自己推算每一位的时间宽度。所以两端波特率必须一致，差一点就会全是乱码。</p>
+<p><strong>接线只有两条规矩</strong></p>
+<ul><li><strong>TX 接对方的 RX，RX 接对方的 TX</strong>（交叉接线）—— 发送端要接到接收端，两根同名的线接在一起是收不到数据的；</li><li><strong>两块板子的 GND 必须连在一起</strong>（共地）—— "高电平"是相对地线而言的，没有共同的 0V 参考点，就无法判断谁高谁低。板载 USB 转串口芯片默认连接 <code>UART0</code>，<code>printf</code> 的输出会重定向到该端口，用于日志输出；业务串口应使用 <code>UART1</code> 或 <code>UART2</code>，避免与日志混在一起。</li></ul>
+<h4 id='官方-api-用法'>官方 API 用法</h4>
+<blockquote><p>完整代码见 <a href="04-小车开发板实验.html#实验三-esp32-uart-实验">第 4 册 · 小车实验三（ESP32 UART 实验）</a></p></blockquote>
+<p><strong>常用 API 与调用流程</strong></p>
+<div class='tw'><table><thead><tr><th>步骤</th><th>调用</th><th>作用</th></tr></thead><tbody><tr><td>1 定参数</td><td><code>uart_param_config(端口, &amp;cfg)</code></td><td>设波特率、数据位、校验位、停止位</td></tr><tr><td>2 定引脚</td><td><code>uart_set_pin(端口, TX, RX, RTS, CTS)</code></td><td>把外设引到具体引脚；不用流控就填 <code>UART_PIN_NO_CHANGE</code></td></tr><tr><td>3 装驱动</td><td><code>uart_driver_install(端口, 收缓冲, 发缓冲, 事件队列深度, &amp;队列, 中断标志)</code></td><td>申请收发缓冲区、起接收任务；装完才能收发</td></tr><tr><td>4 收发</td><td><code>uart_write_bytes()</code> / <code>uart_read_bytes()</code></td><td>发一串字节、收一串字节（带超时）</td></tr></tbody></table></div>
+<blockquote><p>第 1、2、3 步顺序不能颠倒，各做一次；第 4 步才是循环里反复用的那一步。</p></blockquote>
+<h4 id='轮询接收与中断接收'>轮询接收与中断接收</h4>
+<ul><li><strong>轮询接收</strong>：在主循环中调用 <code>uart_read_bytes()</code>，带超时参数；实现简单，但实时性一般。</li><li><strong>中断接收</strong>：<code>uart_driver_install()</code> 时传入事件队列，接收任务阻塞在 <code>xQueueReceive()</code> 上，事件到达后读取数据；实时性好，适合协议解析。</li><li><strong>自收发测试</strong>：将 TXD 与 RXD 用杜邦线短接，发送的数据会被自己接收，用于验证串口配置是否正确。</li></ul>
+<h4 id='数据类型与粘包问题'>数据类型与粘包问题</h4>
+<p>串口传的是一串<strong>字节</strong>，它不保留任何"消息边界"，于是会出现两个真实问题：</p>
+<ul><li><strong>粘包</strong>：发送方连发两帧，接收方一次 <code>uart_read_bytes()</code> 把两帧一起读进来；</li><li><strong>分包</strong>：一帧太长，一次只读到半帧。</li></ul>
+<p><strong>结论：一次 read 不等于一帧。</strong></p>
+<p><strong>解决办法：设计一个带帧头和长度的固定格式</strong>，接收端逐字节解析。例如：</p>
+<pre><code>帧头(2)   长度(1)  命令(1)  数据(N)   校验(1)  帧尾(1)
+AA 55      N       CMD      ...       SUM      0D</code></pre>
+<p>接收端用<strong>状态机</strong>解析。所谓状态机，就是<strong>用一个变量记住"现在收到第几步了"，每来一个字节就按规则决定跳到哪一步</strong>。它一次只处理一个字节：</p>
+<div class='tw'><table><thead><tr><th>当前状态</th><th>做什么</th><th>满足条件后</th></tr></thead><tbody><tr><td>等帧头 1</td><td>找 <code>0xAA</code></td><td>进入「等帧头 2」</td></tr><tr><td>等帧头 2</td><td>判断是不是 <code>0x55</code>，不是就退回上一步</td><td>进入「收长度」</td></tr><tr><td>收长度</td><td>记下这一帧的数据长度 N</td><td>进入「收数据」</td></tr><tr><td>收数据</td><td>连续收 N 个字节</td><td>进入「校验」</td></tr><tr><td>校验</td><td>累加和对不对</td><td>对上就交给业务处理；不对就整帧丢弃，退回最初状态</td></tr></tbody></table></div>
+<p><strong>为什么用状态机</strong>：它既不怕粘包也不怕分包 —— 字节一个一个喂进去，半帧就停在中间状态等着，下一批字节到了接着处理。</p>
+<p>收发流程的完整代码见<a href="04-小车开发板实验.html#实验三-esp32-uart-实验">第 4 册「小车实验三」</a>。</p>
+<hr/>
+<h3 id='7-5-单总线时序传感器-dht11'>7.5 单总线时序传感器（DHT11）</h3>
+<h4 id='原理-2'>原理</h4>
+<p>DHT11 使用一根数据线通信，通过高低电平的持续时间区分数据位：</p>
+<ul><li>主机发起始信号：拉低总线至少 18ms，然后释放。</li><li>从机响应：拉低约 80μs，再拉高约 80μs。</li><li>数据位判定：每个位以 50μs 低电平开始，随后高电平持续约 26~28μs 表示 0，持续约 70μs 表示 1。</li><li>数据传输 40 位：湿度整数、湿度小数、温度整数、温度小数、校验和，前四字节之和的低 8 位应等于校验和。</li></ul>
+<p><strong>时序敏感性</strong>：该协议依赖微秒级时序，任务切换或中断抢占都会导致读取失败。<strong>原因</strong>：协议靠"高电平持续 26μs 还是 70μs"来区分 0 和 1，如果读到一半被中断打断，程序回来时已经过去了几十微秒，这一位就会判错 —— 而<strong>一位错会导致后面所有位全部错位</strong>，整帧数据作废。微秒延时必须使用 <code>esp_rom_delay_us()</code>，不能使用 <code>vTaskDelay()</code>（最小粒度为 1 个 Tick）。</p>
+<h4 id='官方-api-实现'>官方 API 实现</h4>
+<blockquote><p>完整代码见 <a href="04-小车开发板实验.html#实验九-dht11-温湿度采集实验">第 4 册 · 小车实验九（DHT11 温湿度采集实验）</a></p></blockquote>
+<p><strong>DHT11 没有官方驱动</strong>：单总线是厂家自定义的时序，不属于芯片的标准外设，官方库不提供接口，只能照着上面的时序自己操纵 GPIO。</p>
+<div class='tw'><table><thead><tr><th>步骤</th><th>做什么</th><th>关键调用</th></tr></thead><tbody><tr><td>1 起始</td><td>引脚切输出，拉低 ≥18ms，再拉高释放</td><td><code>gpio_set_direction()</code> + <code>gpio_set_level()</code></td></tr><tr><td>2 等响应</td><td>切输入，等从机拉低 80μs、再拉高 80μs</td><td>循环 <code>gpio_get_level()</code> 等待</td></tr><tr><td>3 读 40 位</td><td>每位先低 50μs，再看高电平持续多久：约 26~28μs 是 0，约 70μs 是 1</td><td><code>gpio_get_level()</code> + <code>esp_rom_delay_us()</code></td></tr><tr><td>4 校验</td><td>前 4 字节求和取低 8 位，应等于第 5 字节</td><td>纯计算，不碰硬件</td></tr><tr><td>5 收尾</td><td>引脚恢复为输入并置高，等下一次读取</td><td><code>gpio_set_direction()</code></td></tr></tbody></table></div>
+<blockquote><p>全程只用一个引脚，在"输出发起始信号"和"输入读数据"之间来回切换；所有延时必须用微秒级的 <code>esp_rom_delay_us()</code>。</p></blockquote>
+<h4 id='注意事项'>注意事项</h4>
+<ul><li>数据线必须外接约 4.7kΩ 上拉电阻到 3.3V。</li><li>两次读取之间间隔不少于 1 秒。</li><li>读取失败时应重试并记录失败次数，而不是直接采用错误数据。</li></ul>
+<hr/>
+<h3 id='7-6-i2c-总线'>7.6 I2C 总线</h3>
+<h4 id='原理-3'>原理</h4>
+<p>I2C 使用 SCL（时钟）与 SDA（数据）两根线，均为开漏输出，必须外接上拉电阻（典型 4.7kΩ）。总线上可挂接多个设备，每个设备有唯一的 7 位地址。通信过程为：起始条件 → 设备地址 + 读写位 → 应答 → 寄存器地址 → 数据传输 → 停止条件。逐个解释：</p>
+<ul><li><strong>起始条件（S）</strong>：主机先把数据线拉低，再把时钟线拉低，告诉总线上所有设备"我要开始说话了"；</li><li><strong>设备地址 + 读写位</strong>：主机报出要找的门牌号，末位表示这次是读还是写；</li><li><strong>应答（ACK）</strong>：被点名的设备把数据线拉低一下表示"我在，收到了"；如果没人应答就是 <strong>NACK</strong>，通常说明地址写错或设备没接好；</li><li><strong>寄存器地址</strong>：告诉对方要访问它内部的哪个"抽屉"；</li><li><strong>重复起始（Sr）</strong>：不先发停止条件、直接再发一次起始条件，用于"写完寄存器地址就马上读数据"这种连贯操作；</li><li><strong>停止条件（P）</strong>：时钟线为高时把数据线由低变高，表示通信结束。</li></ul>
+<p>绝大多数传感器采用"寄存器模型"：写配置寄存器，读数据寄存器。调试顺序应为：先扫描总线上的设备地址，再读身份寄存器（如 <code>WHO_AM_I</code>）确认型号，最后读取业务数据。</p>
+<h4 id='官方-api-新驱动'>官方 API（新驱动）</h4>
+<pre><code>#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+#include "driver/i2c_master.h"
+#include "esp_log.h"
+
+#define I2C_PORT    I2C_NUM_0
+#define I2C_SDA     GPIO_NUM_41
+#define I2C_SCL     GPIO_NUM_42
+#define DEV_ADDR    0x68                      // 7 位地址
+
+static const char *TAG = "i2c";
+static i2c_master_bus_handle_t s_bus = NULL;
+static i2c_master_dev_handle_t s_dev = NULL;
+
+void i2c_init(void)
+{
+    i2c_master_bus_config_t bus_cfg = {
+        .i2c_port            = I2C_PORT,
+        .sda_io_num          = I2C_SDA,
+        .scl_io_num          = I2C_SCL,
+        .clk_source          = I2C_CLK_SRC_DEFAULT,
+        .glitch_ignore_cnt   = 7,
+        .flags.enable_internal_pullup = true,
+    };
+    i2c_new_master_bus(&amp;bus_cfg, &amp;s_bus);
+
+    i2c_device_config_t dev_cfg = {
+        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+        .device_address  = DEV_ADDR,
+        .scl_speed_hz    = 400000,
+    };
+    i2c_master_bus_add_device(s_bus, &amp;dev_cfg, &amp;s_dev);
+}
+
+/* 读寄存器：先写寄存器地址，再读回数据 */
+esp_err_t i2c_read_reg(uint8_t reg, uint8_t *buf, size_t len)
+{
+    return i2c_master_transmit_receive(s_dev, &amp;reg, 1, buf, len, 1000);
+}
+
+/* 写寄存器 */
+esp_err_t i2c_write_reg(uint8_t reg, const uint8_t *buf, size_t len)
+{
+    uint8_t tmp[8];
+    tmp[0] = reg;
+    for (size_t i = 0; i &lt; len &amp;&amp; i &lt; 7; i++)
+    {
+        tmp[i + 1] = buf[i];
+    }
+    return i2c_master_transmit(s_dev, tmp, len + 1, 1000);
+}
+
+/* 扫描总线（探测某个地址上是否有设备） */
+void i2c_scan(void)
+{
+    for (uint8_t addr = 0x08; addr &lt; 0x78; addr++)
+    {
+        if (i2c_master_probe(s_bus, addr, 100) == ESP_OK)
+        {
+            ESP_LOGI(TAG, "found device at 0x%02X", addr);
+        }
+    }
+}
+
+void app_main(void)
+{
+    i2c_init();
+
+    ESP_LOGI(TAG, "scanning i2c bus...");
+    i2c_scan();
+
+    uint8_t id = 0;
+
+    while (1)
+    {
+        if (i2c_read_reg(0x75, &amp;id, 1) == ESP_OK)
+        {
+            ESP_LOGI(TAG, "WHO_AM_I = 0x%02X", id);
+        }
+        else
+        {
+            ESP_LOGE(TAG, "device not found");
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}</code></pre>
+<p><strong>常用 API 与调用流程</strong></p>
+<div class='tw'><table><thead><tr><th>步骤</th><th>调用</th><th>作用</th></tr></thead><tbody><tr><td>1 建总线</td><td><code>i2c_new_master_bus(&amp;bus_cfg, &amp;s_bus)</code></td><td>指定 SDA / SCL 引脚，拿回<strong>总线句柄</strong></td></tr><tr><td>2 挂设备</td><td><code>i2c_master_bus_add_device(s_bus, &amp;dev_cfg, &amp;s_dev)</code></td><td>指定器件地址与速率，拿回<strong>设备句柄</strong></td></tr><tr><td>3 收发</td><td><code>i2c_master_transmit()</code> / <code>i2c_master_transmit_receive()</code></td><td>写数据；或先写寄存器地址再读回数据</td></tr><tr><td>4 释放</td><td><code>i2c_master_bus_rm_device()</code> / <code>i2c_del_master_bus()</code></td><td>换设备、或初始化失败时用，实验里一般不用管</td></tr></tbody></table></div>
+<blockquote><p>两个句柄的关系：<strong>总线句柄代表"这条线"</strong>，一条线上可以挂很多器件；<strong>设备句柄代表"线上某一个器件"</strong>，每次收发用的都是设备句柄。所以第 1、2 步各做一次，第 3 步才是循环里的那一步。</p></blockquote>
+<hr/>
+<h4 id='惯性传感器读取示例-icm20602'>惯性传感器读取示例（ICM20602）</h4>
+<blockquote><p>完整代码见 <a href="05-无人机开发板实验.html#实验二-icm20602-惯性数据采集实验">第 5 册 · 无人机实验二（ICM20602 惯性数据采集实验）</a></p></blockquote>
+<ul><li>数据寄存器为<strong>高字节在前</strong>，需按大端方式拼接为 16 位有符号数。</li><li>原始值除以灵敏度（LSB/g）即得到以 g 为单位的加速度，乘以 9.8 换算为 m/s²。</li></ul>
+<h4 id='常见问题'>常见问题</h4>
+<ul><li>扫描不到设备：上拉电阻缺失、地址写成 8 位形式、接线错误、供电异常。</li><li>数据全为 0 或全为 0xFF：设备未初始化或通信失败，应先确认 <code>WHO_AM_I</code> 正确。</li></ul>
+<hr/>
+<h3 id='7-7-spi-总线'>7.7 SPI 总线</h3>
+<h4 id='原理-4'>原理</h4>
+<p>SPI 使用 SCK（时钟）、MOSI（主发从收）、MISO（主收从发）、CS（片选）四根线，全双工通信，速度高于 I2C。</p>
+<p><strong>为什么比 I2C 快</strong>：I2C 是开漏输出，高电平靠上拉电阻"拉"上去，上升沿慢，速度被限制在几百 kHz 到 1MHz；SPI 是推挽输出，高低电平都主动驱动，能轻松跑到几十 MHz。而且 I2C 每传一个字节都要额外传地址和应答位，开销也更大。关键参数为时钟极性与相位（CPOL/CPHA）组成的四种模式，以及时钟频率和片选引脚。</p>
+<ul><li><strong>CPOL（时钟极性）</strong>：时钟线空闲时是高电平还是低电平；</li><li><strong>CPHA（时钟相位）</strong>：在时钟的第几个边沿采样数据。</li></ul>
+<p>两者各 2 种取值，组合起来就是 4 种模式（模式 0~3）。<strong>接一个器件前必须先查手册确认它用哪种模式</strong>，配错就会读出全 0 或全 0xFF。一条总线可挂接多个从设备，每个设备使用独立的片选引脚。</p>
+<h4 id='官方-api-用法-2'>官方 API 用法</h4>
+<blockquote><p>完整代码见 <a href="05-无人机开发板实验.html#实验三-pmw3901-光流传感器-spi-采集实验">第 5 册 · 无人机实验三（PMW3901 光流 SPI 采集实验）</a></p></blockquote>
+<p><strong>常用 API 与调用流程</strong></p>
+<div class='tw'><table><thead><tr><th>步骤</th><th>调用</th><th>作用</th></tr></thead><tbody><tr><td>1 建总线</td><td><code>spi_bus_initialize(主机号, &amp;bus_cfg, SPI_DMA_CH_AUTO)</code></td><td>指定 SCLK / MOSI / MISO，初始化一条 SPI 总线</td></tr><tr><td>2 挂设备</td><td><code>spi_bus_add_device(主机号, &amp;dev_cfg, &amp;dev)</code></td><td>指定片选引脚、时钟频率、模式（CPOL / CPHA），拿回设备句柄</td></tr><tr><td>3 收发</td><td><code>spi_device_transmit(dev, &amp;trans)</code></td><td>填好 <code>tx_buffer</code> / <code>rx_buffer</code> 与长度，一次把收发做完</td></tr><tr><td>4 释放</td><td><code>spi_bus_remove_device()</code> / <code>spi_bus_free()</code></td><td>换设备时用，实验里一般不用管</td></tr></tbody></table></div>
+<blockquote><p>和 I2C 一样是<strong>先建总线、再挂设备</strong>，区别是 SPI 要四根线以上（时钟、两根数据线、每个器件一根片选）。<code>spi_device_transmit()</code> 一次就把发送和接收都做完 —— SPI 是全双工，发出去的同时就在收。</p></blockquote>
+<h4 id='传感器读取示例-spl06-001-气压计'>传感器读取示例（SPL06-001 气压计）</h4>
+<blockquote><p>完整代码见 <a href="05-无人机开发板实验.html#实验五-spl06-001-气压计-spi-采集实验">第 5 册 · 无人机实验五（SPL06-001 气压计 SPI 采集实验）</a></p></blockquote>
+<h4 id='常见问题-2'>常见问题</h4>
+<ul><li>读回全 0 或全 0xFF：模式（CPOL/CPHA）配置错误、片选未拉低、时钟频率超过器件上限。</li><li>多设备共用总线时，每个设备必须使用独立片选引脚。</li><li><code>length</code> 字段的单位是<strong>比特</strong>，不是字节。</li></ul>
+<hr/>
+<h3 id='7-8-显示模块-oled-与-tft'>7.8 显示模块：OLED 与 TFT</h3>
+<p>显示模块是嵌入式系统中最常用的本地人机界面。本节只讲两类典型器件的接口与驱动要点，具体字库与图形库由实验提供。</p>
+<h4 id='1-oled-i2c-接口'>1. OLED（I2C 接口）</h4>
+<ul><li><strong>典型器件</strong>：SSD1306，分辨率 128×64，I2C 地址通常为 <code>0x3C</code>（部分模块为 <code>0x3D</code>）。</li><li><strong>接法</strong>：VCC 接 3.3V，GND 接地，SCL / SDA 接 I2C 总线，两根线各接 4.7kΩ 上拉电阻。</li><li><strong>显示原理</strong>：显存按<strong>页（Page）与列（Column）</strong>组织，共 8 页、每页 8 行像素。写入数据后列地址自动递增。</li><li><strong>操作方式</strong>：写<strong>命令</strong>与写<strong>数据</strong>通过控制字节区分，均走 I2C 总线。</li></ul>
+<pre><code>#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/i2c_master.h"
+#include "esp_log.h"
+
+static const char *TAG = "oled";
+
+#define OLED_ADDR   0x3C
+#define OLED_CTRL_CMD  0x00          /* 控制字节：后面跟的是命令 */
+#define OLED_CTRL_DATA 0x40          /* 控制字节：后面跟的是数据 */
+
+static i2c_master_dev_handle_t s_oled = NULL;
+
+/* 发送一条命令 */
+void oled_write_cmd(uint8_t cmd)
+{
+    uint8_t buf[2] = { OLED_CTRL_CMD, cmd };
+    i2c_master_transmit(s_oled, buf, 2, 1000);
+}
+
+/* 发送一段显存数据 */
+void oled_write_data(const uint8_t *data, size_t len)
+{
+    uint8_t buf[129];
+
+    buf[0] = OLED_CTRL_DATA;
+    for (size_t i = 0; i &lt; len &amp;&amp; i &lt; 128; i++)
+    {
+        buf[i + 1] = data[i];
+    }
+    i2c_master_transmit(s_oled, buf, len + 1, 1000);
+}
+
+/* 说明：要显示文字需要先取模生成点阵数组，此处用点阵图案演示写入流程。 */
+static const uint8_t s_logo[8] = { 0x3C, 0x42, 0x81, 0x81, 0x81, 0x81, 0x42, 0x3C };
+
+void app_main(void)
+{
+    /* 初始化 I2C 总线并挂载 OLED */
+    i2c_master_bus_config_t bus_cfg = {
+        .i2c_port          = I2C_NUM_0,
+        .sda_io_num        = GPIO_NUM_8,
+        .scl_io_num        = GPIO_NUM_9,
+        .clk_source        = I2C_CLK_SRC_DEFAULT,
+        .glitch_ignore_cnt = 7,
+        .flags.enable_internal_pullup = true,
+    };
+    i2c_master_bus_handle_t bus = NULL;
+    i2c_new_master_bus(&amp;bus_cfg, &amp;bus);
+
+    i2c_device_config_t dev_cfg = {
+        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+        .device_address  = OLED_ADDR,
+        .scl_speed_hz    = 400000,
+    };
+    i2c_master_bus_add_device(bus, &amp;dev_cfg, &amp;s_oled);
+
+    /* 初始化序列：关显示 → 设置页寻址 → 清屏 → 开显示 */
+    oled_write_cmd(0xAE);
+    oled_write_cmd(0x20);
+    oled_write_cmd(0x02);
+
+    for (int page = 0; page &lt; 8; page++)
+    {
+        oled_write_cmd(0xB0 + page);
+        oled_write_cmd(0x00);
+        oled_write_cmd(0x10);
+        oled_write_data(s_logo, 8);
+    }
+
+    oled_write_cmd(0xAF);
+    ESP_LOGI(TAG, "oled init done");
+
+    while (1)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}</code></pre>
+<ul><li><strong>汉字显示</strong>：需要先用取模软件生成点阵数组，再按页写入显存。</li><li><strong>工程建议</strong>：实际项目中使用成熟的图形库（如 <code>u8g2</code>、<code>esp_lcd</code> 配套驱动），不要从零实现字库。</li></ul>
+<p><strong>常用 API 与调用流程</strong></p>
+<div class='tw'><table><thead><tr><th>步骤</th><th>调用</th><th>作用</th></tr></thead><tbody><tr><td>1 建总线 + 挂设备</td><td><code>i2c_new_master_bus()</code> → <code>i2c_master_bus_add_device()</code></td><td>与 7.6 相同，拿回 OLED 的设备句柄</td></tr><tr><td>2 发命令</td><td><code>i2c_master_transmit()</code>，第 1 个字节填 <code>0x00</code></td><td>设置页地址、清屏、开关显示</td></tr><tr><td>3 发数据</td><td><code>i2c_master_transmit()</code>，第 1 个字节填 <code>0x40</code></td><td>写显存，128×64 共 8 页、每页 8 行</td></tr><tr><td>4 刷新</td><td>重复第 2、3 步</td><td>屏幕上要变化的内容，每次都得重新写一遍</td></tr></tbody></table></div>
+<blockquote><p>关键只有一句：<strong>命令和数据走同一条 I2C 线，靠第 1 个"控制字节"区分</strong>（<code>0x00</code> 是命令，<code>0x40</code> 是数据）。</p></blockquote>
+<hr/>
+<h4 id='2-tft-彩屏-spi-接口'>2. TFT 彩屏（SPI 接口）</h4>
+<p><strong>典型器件</strong>：ILI9341（2.4 寸，240×320）、ST7789（1.3 / 1.8 寸）。两者都是 SPI 接口，区别在于驱动支持：</p>
+<div class='tw'><table><thead><tr><th>器件</th><th>ESP-IDF 官方驱动</th><th>Wokwi 仿真</th></tr></thead><tbody><tr><td><strong>ILI9341</strong></td><td>无官方 <code>esp_lcd</code> 面板驱动，需按命令表自行初始化</td><td><strong>支持</strong>（元件 <code>wokwi-ili9341</code>）</td></tr><tr><td>ST7789</td><td>有官方驱动 <code>esp_lcd_new_panel_st7789()</code></td><td>不支持</td></tr></tbody></table></div>
+<p>本节以 <strong>ILI9341</strong> 为例，因为它是唯一能在 Wokwi 里跑起来的彩屏。</p>
+<p><strong>控制引脚</strong></p>
+<ul><li><code>SCK / MOSI / CS</code>：SPI 总线；只写不读，MISO 不用接</li><li><code>DC</code>：数据 / 命令选择 —— 低电平表示接下来发的是命令，高电平表示发的是数据</li><li><code>RST</code>：复位引脚，初始化前必须先复位</li><li><code>LED</code>：背光，不接则黑屏</li></ul>
+<p><strong>驱动思路</strong></p>
+<p>ILI9341 没有官方驱动，但官方 <code>esp_lcd</code> 提供了两个底层接口：</p>
+<ul><li><code>esp_lcd_panel_io_tx_param()</code> —— 发送一条命令和它的参数</li><li><code>esp_lcd_panel_io_tx_color()</code> —— 发送显存数据</li></ul>
+<p>按数据手册的命令表把初始化序列发一遍，再写显存，屏幕就亮了。</p>
+<p><strong>Wokwi 接线</strong></p>
+<div class='tw'><table><thead><tr><th>wokwi-ili9341 引脚</th><th>接到 ESP32-S3</th></tr></thead><tbody><tr><td>VCC</td><td>3.3V</td></tr><tr><td>GND</td><td>GND</td></tr><tr><td>CS</td><td>GPIO10</td></tr><tr><td>RST</td><td>GPIO14</td></tr><tr><td>D/C</td><td>GPIO9</td></tr><tr><td>MOSI</td><td>GPIO11</td></tr><tr><td>SCK</td><td>GPIO12</td></tr><tr><td>LED</td><td>GPIO13</td></tr></tbody></table></div>
+<p><strong>完整示例</strong></p>
+<pre><code>#include "driver/gpio.h"
+#include "driver/spi_master.h"
+#include "esp_lcd_panel_io.h"
+#include "esp_heap_caps.h"
+#include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+/* ===== 引脚定义（按实际接线修改）=====
+   与 Wokwi 的 wokwi-ili9341 元件一一对应：
+   CS -&gt; 片选   DC -&gt; 数据/命令   RST -&gt; 复位
+   SCK -&gt; 时钟  MOSI -&gt; 数据      LED -&gt; 背光 */
+#define PIN_SCLK    GPIO_NUM_12
+#define PIN_MOSI    GPIO_NUM_11
+#define PIN_CS      GPIO_NUM_10
+#define PIN_DC      GPIO_NUM_9
+#define PIN_RST     GPIO_NUM_14
+#define PIN_LED     GPIO_NUM_13
+
+#define LCD_W       240                 /* 屏幕宽（像素） */
+#define LCD_H       320                 /* 屏幕高（像素） */
+#define STRIP       20                  /* 每次刷新 20 行，省内存 */
+
+static const char *TAG = "tft";
+
+/* 把 8 位的红、绿、蓝合成为一个 16 位颜色值（RGB565） */
+static uint16_t color565(int r, int g, int b)
+{
+    return (uint16_t)(((r &amp; 0xF8) &lt;&lt; 8) | ((g &amp; 0xFC) &lt;&lt; 3) | (b &gt;&gt; 3));
+}
+
+/* 设置要写入的矩形区域：先写列地址，再写行地址，坐标是"起点 ~ 终点"，都包含在内 */
+static void lcd_set_window(esp_lcd_panel_io_handle_t io,
+                           int x0, int y0, int x1, int y1)
+{
+    uint8_t col[4] = { x0 &gt;&gt; 8, x0 &amp; 0xFF, x1 &gt;&gt; 8, x1 &amp; 0xFF };
+    uint8_t row[4] = { y0 &gt;&gt; 8, y0 &amp; 0xFF, y1 &gt;&gt; 8, y1 &amp; 0xFF };
+
+    esp_lcd_panel_io_tx_param(io, 0x2A, col, 4);   /* 命令 0x2A：列地址 */
+    esp_lcd_panel_io_tx_param(io, 0x2B, row, 4);   /* 命令 0x2B：行地址 */
+}
+
+/* 用纯色填充一个矩形区域 */
+static void lcd_fill(esp_lcd_panel_io_handle_t io, uint16_t *buf,
+                     int x0, int y0, int x1, int y1, uint16_t color)
+{
+    int w = x1 - x0 + 1;
+    int h = y1 - y0 + 1;
+
+    /* ILI9341 要求先发高字节，所以要交换一下字节顺序 */
+    uint16_t be = (uint16_t)((color &gt;&gt; 8) | (color &lt;&lt; 8));
+
+    for (int i = 0; i &lt; w * h; i++)
+    {
+        buf[i] = be;
+    }
+
+    lcd_set_window(io, x0, y0, x1, y1);
+    esp_lcd_panel_io_tx_color(io, 0x2C, buf, w * h * 2);   /* 命令 0x2C：写显存 */
+}
+
+/* ILI9341 初始化序列 */
+static void lcd_init_ili9341(esp_lcd_panel_io_handle_t io)
+{
+    uint8_t p[15];
+
+    p[0] = 0x00; p[1] = 0xC1; p[2] = 0x30;
+    esp_lcd_panel_io_tx_param(io, 0xCF, p, 3);
+
+    p[0] = 0x64; p[1] = 0x03; p[2] = 0x12; p[3] = 0x81;
+    esp_lcd_panel_io_tx_param(io, 0xED, p, 4);
+
+    p[0] = 0x85; p[1] = 0x10; p[2] = 0x7A;
+    esp_lcd_panel_io_tx_param(io, 0xE8, p, 3);
+
+    p[0] = 0x39; p[1] = 0x2C; p[2] = 0x00; p[3] = 0x34; p[4] = 0x02;
+    esp_lcd_panel_io_tx_param(io, 0xCB, p, 5);
+
+    p[0] = 0x20;
+    esp_lcd_panel_io_tx_param(io, 0xF7, p, 1);
+
+    p[0] = 0x00; p[1] = 0x00;
+    esp_lcd_panel_io_tx_param(io, 0xEA, p, 2);
+
+    p[0] = 0x23;                                        /* 电源控制 1 */
+    esp_lcd_panel_io_tx_param(io, 0xC0, p, 1);
+
+    p[0] = 0x10;                                        /* 电源控制 2 */
+    esp_lcd_panel_io_tx_param(io, 0xC1, p, 1);
+
+    p[0] = 0x3E; p[1] = 0x28;                           /* VCOM 控制 1 */
+    esp_lcd_panel_io_tx_param(io, 0xC5, p, 2);
+
+    p[0] = 0x86;                                        /* VCOM 控制 2 */
+    esp_lcd_panel_io_tx_param(io, 0xC7, p, 1);
+
+    p[0] = 0x48;                                        /* 显示方向：竖屏 + BGR */
+    esp_lcd_panel_io_tx_param(io, 0x36, p, 1);
+
+    p[0] = 0x55;                                        /* 像素格式：16 位 RGB565 */
+    esp_lcd_panel_io_tx_param(io, 0x3A, p, 1);
+
+    p[0] = 0x00; p[1] = 0x18;
+    esp_lcd_panel_io_tx_param(io, 0xB1, p, 2);
+
+    p[0] = 0x08; p[1] = 0x82; p[2] = 0x27;
+    esp_lcd_panel_io_tx_param(io, 0xB6, p, 3);
+
+    esp_lcd_panel_io_tx_param(io, 0x11, NULL, 0);       /* 退出睡眠 */
+    vTaskDelay(pdMS_TO_TICKS(120));
+
+    esp_lcd_panel_io_tx_param(io, 0x29, NULL, 0);       /* 打开显示 */
+    vTaskDelay(pdMS_TO_TICKS(50));
+}
+
+void app_main(void)
+{
+    /* 1. 初始化 SPI 总线 */
+    spi_bus_config_t bus_cfg = {
+        .sclk_io_num     = PIN_SCLK,
+        .mosi_io_num     = PIN_MOSI,
+        .miso_io_num     = -1,                     /* 只写不读 */
+        .quadwp_io_num   = -1,
+        .quadhd_io_num   = -1,
+        .max_transfer_sz = LCD_W * STRIP * sizeof(uint16_t),
+    };
+    ESP_ERROR_CHECK(spi_bus_initialize(SPI2_HOST, &amp;bus_cfg, SPI_DMA_CH_AUTO));
+
+    /* 2. 建立 LCD 的 SPI 接口（告诉 esp_lcd：CS、DC 是哪两根，时钟多快） */
+    esp_lcd_panel_io_handle_t io = NULL;
+    esp_lcd_panel_io_spi_config_t io_cfg = {
+        .cs_gpio_num       = PIN_CS,
+        .dc_gpio_num       = PIN_DC,
+        .spi_mode          = 0,
+        .pclk_hz           = 20 * 1000 * 1000,     /* 20MHz */
+        .trans_queue_depth = 10,
+        .lcd_cmd_bits      = 8,
+        .lcd_param_bits    = 8,
+    };
+    ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)SPI2_HOST,
+                                             &amp;io_cfg, &amp;io));
+
+    /* 3. 硬件复位 */
+    gpio_set_direction(PIN_RST, GPIO_MODE_OUTPUT);
+    gpio_set_level(PIN_RST, 1);
+    vTaskDelay(pdMS_TO_TICKS(10));
+    gpio_set_level(PIN_RST, 0);
+    vTaskDelay(pdMS_TO_TICKS(20));
+    gpio_set_level(PIN_RST, 1);
+    vTaskDelay(pdMS_TO_TICKS(120));
+
+    /* 4. 写入初始化序列 */
+    lcd_init_ili9341(io);
+
+    /* 5. 打开背光 */
+    gpio_set_direction(PIN_LED, GPIO_MODE_OUTPUT);
+    gpio_set_level(PIN_LED, 1);
+
+    ESP_LOGI(TAG, "ILI9341 ready, %dx%d", LCD_W, LCD_H);
+
+    /* 6. 申请一块 DMA 可以访问的缓冲区 */
+    uint16_t *buf = heap_caps_malloc(LCD_W * STRIP * sizeof(uint16_t), MALLOC_CAP_DMA);
+    if (buf == NULL)
+    {
+        ESP_LOGE(TAG, "no memory for buffer");
+        return;
+    }
+
+    /* 7. 循环刷红、绿、蓝三种颜色 */
+    while (1)
+    {
+        uint16_t colors[3] = {
+            color565(255, 0, 0),        /* 红 */
+            color565(0, 255, 0),        /* 绿 */
+            color565(0, 0, 255),        /* 蓝 */
+        };
+
+        for (int c = 0; c &lt; 3; c++)
+        {
+            for (int y = 0; y &lt; LCD_H; y += STRIP)
+            {
+                int y1 = y + STRIP - 1;
+                if (y1 &gt; LCD_H - 1)
+                {
+                    y1 = LCD_H - 1;
+                }
+                lcd_fill(io, buf, 0, y, LCD_W - 1, y1, colors[c]);
+            }
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+    }
+}</code></pre>
+<p><strong>常用 API 与调用流程</strong></p>
+<div class='tw'><table><thead><tr><th>步骤</th><th>调用</th><th>作用</th></tr></thead><tbody><tr><td>1 建 SPI 总线</td><td><code>spi_bus_initialize()</code></td><td>配好 SCLK / MOSI，只写不读可不接 MISO</td></tr><tr><td>2 建 LCD 接口</td><td><code>esp_lcd_new_panel_io_spi()</code></td><td>告诉 esp_lcd：CS、DC 是哪两根，时钟多快</td></tr><tr><td>3 硬件复位</td><td><code>gpio_set_level()</code> 拉低 RST 再拉高</td><td>屏幕要求的上电复位时序</td></tr><tr><td>4 写初始化序列</td><td><code>esp_lcd_panel_io_tx_param()</code> 按命令表逐条下发</td><td>设置方向、颜色格式、扫描方式等</td></tr><tr><td>5 开背光</td><td><code>gpio_set_level()</code> 把 LED 置高</td><td>不点这一下，屏幕始终是黑的</td></tr><tr><td>6 画图</td><td><code>esp_lcd_panel_io_tx_color()</code> 推送像素数据</td><td>先用 <code>0x2A</code> / <code>0x2B</code> 定好矩形区域，再送颜色</td></tr></tbody></table></div>
+<blockquote><p>相比 OLED，TFT 多了<strong>复位</strong>和<strong>初始化序列</strong>两步：屏幕出厂后必须把厂商给的寄存器配置一条条写进去，它才知道按什么方向、什么颜色格式显示。这一步没有通用写法，只能照搬厂商或驱动库给的命令表。</p></blockquote>
+<p><strong>实验现象</strong>：屏幕依次整屏刷红、绿、蓝，每种颜色停留 1 秒。</p>
+<div class='tw'><table><thead><tr><th>对比项</th><th>OLED（SSD1306）</th><th>TFT（ILI9341）</th></tr></thead><tbody><tr><td>接口</td><td>I2C，两根线</td><td>SPI，四根线以上</td></tr><tr><td>分辨率</td><td>128×64</td><td>240×320</td></tr><tr><td>颜色</td><td>单色</td><td>彩色</td></tr><tr><td>刷新速度</td><td>较慢</td><td>快</td></tr><tr><td>适用场景</td><td>显示数值、状态、简单菜单</td><td>显示图片、波形、图形界面</td></tr><tr><td>难点</td><td>字模与页寻址</td><td>引脚多、初始化命令多</td></tr></tbody></table></div>
+<h4 id='3-调试顺序'>3. 调试顺序</h4>
+<ol><li>先确认背光能点亮（TFT）或屏幕能清屏（OLED）；</li><li>再扫描 I2C 地址 / 抓 SPI 波形，确认通信正常；</li><li>最后逐步实现"画点 → 画线 → 显示字符 → 显示变量"。</li></ol>
+<hr/>
+<h3 id='7-9-执行器驱动'>7.9 执行器驱动</h3>
+<p>执行器是嵌入式系统的"输出端"。不同执行器的驱动电路与驱动方式差异很大，本节统一梳理。</p>
+<div class='tw'><table><thead><tr><th>执行器</th><th>驱动方式</th><th>驱动电路要求</th><th>关键参数</th></tr></thead><tbody><tr><td>LED</td><td>GPIO 直驱</td><td>串联限流电阻</td><td>正向压降、工作电流</td></tr><tr><td>蜂鸣器（有源）</td><td>GPIO 直驱或三极管</td><td>电流较大时用三极管</td><td>给电即响</td></tr><tr><td>蜂鸣器（无源）</td><td>PWM 驱动</td><td>三极管驱动</td><td>频率决定音调</td></tr><tr><td>继电器</td><td>GPIO + 三极管/MOS</td><td><strong>必须并续流二极管</strong></td><td>线圈电流、触点容量</td></tr><tr><td>直流水泵</td><td>GPIO + MOS</td><td>独立供电 + 续流二极管</td><td>启动电流大于额定电流</td></tr><tr><td>雾化片</td><td>GPIO + MOS</td><td>独立供电</td><td>不可长时间干烧</td></tr><tr><td>舵机</td><td>50Hz PWM</td><td>独立 5V 供电，必须共地</td><td>脉宽 0.5~2.5ms</td></tr><tr><td>直流电机</td><td>PWM + H 桥（L298N）</td><td>独立 12V 供电，必须共地</td><td>转向 + 占空比调速</td></tr></tbody></table></div>
+<h4 id='1-蜂鸣器'>1. 蜂鸣器</h4>
+<pre><code>#include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+#define BUZZER_GPIO   GPIO_NUM_3
+
+void buzzer_init(void)
+{
+    gpio_set_direction(BUZZER_GPIO, GPIO_MODE_OUTPUT);
+}
+
+void buzzer_beep(int times)
+{
+    for (int i = 0; i &lt; times; i++)
+    {
+        gpio_set_level(BUZZER_GPIO, 1);
+        vTaskDelay(pdMS_TO_TICKS(200));
+        gpio_set_level(BUZZER_GPIO, 0);
+        vTaskDelay(pdMS_TO_TICKS(200));
+    }
+}
+
+void app_main(void)
+{
+    buzzer_init();
+
+    while (1)
+    {
+        buzzer_beep(3);                               /* 响三声 */
+        vTaskDelay(pdMS_TO_TICKS(3000));
+    }
+}</code></pre>
+<p>无源蜂鸣器需要用 LEDC 输出音频频率的方波，改变频率即可改变音调。</p>
+<p><strong>调用流程</strong></p>
+<div class='tw'><table><thead><tr><th>步骤</th><th>调用</th><th>作用</th></tr></thead><tbody><tr><td>1 初始化</td><td><code>gpio_set_direction(引脚, GPIO_MODE_OUTPUT)</code></td><td>把引脚配成输出</td></tr><tr><td>2 响一声</td><td><code>gpio_set_level(1)</code> → 延时 → <code>gpio_set_level(0)</code></td><td>有源蜂鸣器：电平直接决定响不响</td></tr><tr><td>3 想变音调</td><td>改用 LEDC：<code>ledc_timer_config()</code> + <code>ledc_set_duty()</code> + <code>ledc_update_duty()</code></td><td>无源蜂鸣器：频率决定音调</td></tr></tbody></table></div>
+<blockquote><p>有源蜂鸣器内部自带振荡电路，给电平就响；无源蜂鸣器相当于一只小喇叭，必须喂它<strong>方波</strong>才响，改频率才能变调。</p></blockquote>
+<hr/>
+<h4 id='2-舵机'>2. 舵机</h4>
+<p>舵机使用 50Hz（周期 20ms）的 PWM，高电平宽度决定角度。<strong>为什么必须 50Hz</strong>：舵机内部按 20ms 为一个周期来解算脉宽，周期不对它就无法正确识别角度，表现是抖动、乱转甚至完全不动。</p>
+<div class='tw'><table><thead><tr><th>角度</th><th>高电平宽度</th><th>占空比（20ms 周期）</th><th>14 位分辨率计数值</th></tr></thead><tbody><tr><td>0°</td><td>0.5ms</td><td>2.5%</td><td>410</td></tr><tr><td>90°</td><td>1.5ms</td><td>7.5%</td><td>1229</td></tr><tr><td>180°</td><td>2.5ms</td><td>12.5%</td><td>2048</td></tr></tbody></table></div>
+<pre><code>#include "driver/gpio.h"
+#include "driver/ledc.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+#define SERVO_GPIO   GPIO_NUM_7
+
+/* 注意：ESP32-S3 的 LEDC 最高只支持 14 位分辨率，占空比范围 0 ~ 16383 */
+void servo_init(void)
+{
+    ledc_timer_config_t timer = {
+        .speed_mode      = LEDC_LOW_SPEED_MODE,
+        .timer_num       = LEDC_TIMER_0,
+        .duty_resolution = LEDC_TIMER_14_BIT,
+        .freq_hz         = 50,                    /* 舵机固定 50Hz */
+        .clk_cfg         = LEDC_AUTO_CLK,
+    };
+    ledc_timer_config(&amp;timer);
+
+    ledc_channel_config_t ch = {
+        .gpio_num   = SERVO_GPIO,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .channel    = LEDC_CHANNEL_0,
+        .timer_sel  = LEDC_TIMER_0,
+        .duty       = 0,
+    };
+    ledc_channel_config(&amp;ch);
+}
+
+/* 角度 0 ~ 180 度 对应 脉宽 0.5ms ~ 2.5ms */
+void servo_set_angle(int angle)
+{
+    int duty = 410 + (2048 - 410) * angle / 180;
+
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
+}
+
+void app_main(void)
+{
+    servo_init();
+
+    while (1)
+    {
+        servo_set_angle(0);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        servo_set_angle(90);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        servo_set_angle(180);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}</code></pre>
+<p><strong>调用流程</strong>：<code>ledc_timer_config()</code>（固定 50Hz、14 位）→ <code>ledc_channel_config()</code>（把通道绑到引脚）→ 每转一个角度调一次 <code>ledc_set_duty()</code> + <code>ledc_update_duty()</code>。</p>
+<blockquote><p>舵机和 LED 用的是同一套 LEDC，区别只在<strong>频率必须 50Hz</strong>、占空比要按脉宽换算。</p></blockquote>
+<h4 id='3-驱动电路的三个铁律'>3. 驱动电路的三个铁律</h4>
+<ol><li><strong>限流</strong>：LED 必须串限流电阻，三极管基极必须串限流电阻。<strong>为什么</strong>：LED 导通后内阻极小，直接接 3.3V 会瞬间流过远超它承受能力的电流而烧毁，串一只电阻就能把电流限制在安全范围内。</li><li><strong>续流</strong>：继电器、电机、水泵等感性负载两端必须并二极管。</li><li><strong>共地 + 独立供电</strong>：大功率负载单独供电，但与主控<strong>必须共地</strong>。</li></ol>
+<hr/>
+<h3 id='7-10-中断'>7.10 中断</h3>
+<h4 id='1-什么是中断'>1. 什么是中断</h4>
+<p><strong>中断</strong>就是：CPU 正在执行程序时，被外设"叫去"处理一件更紧急的事，处理完再回到原来的地方继续。</p>
+<p>打个比方：你在写作业，门铃响了 —— 你会<strong>先在作业本上做个记号</strong>（记住做到哪），去开门，回来接着往下写。中断就是这个过程：<strong>保存现场 → 处理事情 → 恢复现场</strong>。</p>
+<h4 id='2-为什么需要中断-和轮询对比'>2. 为什么需要中断（和轮询对比）</h4>
+<div class='tw'><table><thead><tr><th>方式</th><th>做法</th><th>问题</th></tr></thead><tbody><tr><td><strong>轮询</strong></td><td>主循环不停地问"按键按了吗"</td><td>白白浪费 CPU；问得慢一点就漏掉事件</td></tr><tr><td><strong>中断</strong></td><td>事件发生时硬件主动通知 CPU</td><td>CPU 该干嘛干嘛，事件一个不漏</td></tr></tbody></table></div>
+<h4 id='3-中断的四个步骤'>3. 中断的四个步骤</h4>
+<div class='tw'><table><thead><tr><th>步骤</th><th>发生什么</th></tr></thead><tbody><tr><td>1</td><td>外设发生事件（按键按下、串口收到数据、定时器到点）</td></tr><tr><td>2</td><td>硬件产生中断请求，CPU <strong>保存现场</strong>（当前执行到哪、寄存器内容）</td></tr><tr><td>3</td><td>跳去执行<strong>中断服务函数（ISR）</strong> —— 就是我们自己写的那段代码</td></tr><tr><td>4</td><td>ISR 执行完，CPU <strong>恢复现场</strong>，回到刚才被打断的地方继续跑</td></tr></tbody></table></div>
+<h4 id='4-esp-idf-里怎么写-gpio-中断'>4. ESP-IDF 里怎么写 GPIO 中断</h4>
+<p>以"按键按下计数"为例，用最简单的做法：<strong>中断里只改一个变量，主循环里再处理</strong>。</p>
+<pre><code>#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/gpio.h"
+#include "esp_attr.h"
+#include "esp_log.h"
+
+#define KEY_GPIO   GPIO_NUM_4
+
+static const char *TAG = "key";
+
+/* 中断和主循环都要用它，必须加 volatile */
+static volatile int s_key_count = 0;
+
+/* 中断服务函数：只做最简单的事 */
+static void IRAM_ATTR key_isr(void *arg)
+{
+    s_key_count++;                      /* 只加一个计数，别的都不做 */
+}
+
+void app_main(void)
+{
+    gpio_config_t cfg = {
+        .pin_bit_mask = 1ULL &lt;&lt; KEY_GPIO,
+        .mode         = GPIO_MODE_INPUT,
+        .pull_up_en   = GPIO_PULLUP_ENABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type    = GPIO_INTR_NEGEDGE,   /* 下降沿触发（按下时） */
+    };
+    gpio_config(&amp;cfg);
+
+    gpio_install_isr_service(0);                    /* 第一步：装中断服务 */
+    gpio_isr_handler_add(KEY_GPIO, key_isr, NULL);  /* 第二步：把函数挂到引脚上 */
+
+    while (1)
+    {
+        if (s_key_count &gt; 0)
+        {
+            ESP_LOGI(TAG, "按下次数 = %d", s_key_count);
+            s_key_count = 0;
+        }
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}</code></pre>
+<p><strong>常用 API 与调用流程</strong></p>
+<div class='tw'><table><thead><tr><th>步骤</th><th>调用</th><th>作用</th></tr></thead><tbody><tr><td>1 配引脚</td><td><code>gpio_config(&amp;cfg)</code>，<code>intr_type</code> 填触发方式</td><td>告诉引脚"哪个边沿算一次事件"</td></tr><tr><td>2 装服务</td><td><code>gpio_install_isr_service(0)</code></td><td>全局只装一次，为 GPIO 中断准备好底层服务</td></tr><tr><td>3 挂函数</td><td><code>gpio_isr_handler_add(引脚, 函数, 参数)</code></td><td>把这个引脚的中断绑到自己写的函数上</td></tr><tr><td>4 等触发</td><td>硬件自动调用你挂上去的函数</td><td>不用手写调用，事件来了自动进来</td></tr><tr><td>5 交接</td><td>函数里只改一个标记，主循环或任务里再处理</td><td>中断不能久留</td></tr></tbody></table></div>
+<blockquote><p>第 2、3 步各做一次，第 4 步是硬件自动发生的，第 5 步是要养成的习惯。忘了第 2 步，中断永远不会触发。</p></blockquote>
+<p><strong>三个必须注意的点</strong></p>
+<ol><li><strong><code>volatile</code> 不能省</strong> —— 中断里改的变量，编译器优化后可能认为主循环里的值不会变，加了 <code>volatile</code> 才会每次都重新去内存里读；</li><li><strong><code>IRAM_ATTR</code> 要写上</strong> —— 它把这个函数放进内部 RAM，保证中断能立刻执行；</li><li><strong>触发方式要和硬件匹配</strong> —— 按键接 GND 用<strong>下降沿</strong>，接 3.3V 用<strong>上升沿</strong>，抖动厉害的场合可用 <code>GPIO_INTR_ANYEDGE</code> 再在软件里消抖。</li></ol>
+<h4 id='5-中断服务函数的三条铁律'>5. 中断服务函数的三条铁律</h4>
+<ul><li><strong>必须短</strong>：只做"记一笔"，不做耗时的事；</li><li><strong>不能阻塞</strong>：不能调用 <code>vTaskDelay()</code>，也不能在里面等数据；</li><li><strong>不能打印大段日志</strong>：串口输出很慢，中断里打印很容易拖垮整个系统。</li></ul>
+<p>那"必须处理、又花时间"的事怎么办？<strong>中断里丢一个事件出去，交给任务慢慢做</strong> —— 详见 <a href="03-无线与系统.html#12-中断配合规范">第 3 册 · 8.4 节「中断配合规范」</a>。</p>
+<h4 id='6-中断优先级'>6. 中断优先级</h4>
+<ul><li><strong>中断优先级数字越小越优先</strong>，和 FreeRTOS 任务的规则<strong>正好相反</strong>（任务优先级是数字越大越优先）；</li><li>高优先级中断可以打断正在执行的低优先级中断；</li><li>一般用默认优先级即可，不需要手动改。</li></ul>
+<h4 id='7-常见坑'>7. 常见坑</h4>
+<div class='tw'><table><thead><tr><th>现象</th><th>原因</th></tr></thead><tbody><tr><td>一进中断就重启</td><td>中断里调用了阻塞接口，或函数没写 <code>IRAM_ATTR</code></td></tr><tr><td>一次按下触发好几次</td><td>按键机械抖动，需要硬件电容或软件消抖</td></tr><tr><td>中断根本不触发</td><td>忘了 <code>gpio_install_isr_service()</code>，或 <code>intr_type</code> 填成了 <code>GPIO_INTR_DISABLE</code></td></tr><tr><td>中断触发后数据不对</td><td>共享变量没加 <code>volatile</code></td></tr></tbody></table></div>
+<hr/>
+<h3 id='7-11-看门狗'>7.11 看门狗</h3>
+<h4 id='1-什么是看门狗'>1. 什么是看门狗</h4>
+<p><strong>看门狗（Watchdog）是一个倒数计时器</strong>：程序必须每隔一段时间把它"喂"一次（重新装一个较大的数）；如果程序卡死了、没人喂，计数减到 0 时看门狗就<strong>强制重启芯片</strong>。</p>
+<p>打个比方：一个必须定时按掉的闹钟 —— 你按时按它就没事，你要是被"卡住"了按不了，它就强制让你"重新开始"。</p>
+<h4 id='2-为什么需要看门狗'>2. 为什么需要看门狗</h4>
+<p>嵌入式设备常常<strong>无人值守</strong>（装在机器里、放在野外），程序可能因为电磁干扰、死锁、指针跑飞而卡死。而<strong>卡死比重启更可怕</strong>：卡死的设备永远不会自己恢复，重启至少还能重新工作。</p>
+<p>看门狗就是最后一道保险：<strong>宁可重启，也不许永远卡死</strong>。</p>
+<h4 id='3-esp32-里有两类看门狗'>3. ESP32 里有两类看门狗</h4>
+<div class='tw'><table><thead><tr><th>类型</th><th>监控谁</th><th>触发条件</th></tr></thead><tbody><tr><td><strong>任务看门狗（TWDT）</strong></td><td>任务</td><td>某个任务长时间占着 CPU 不让出（通常是忘了 <code>vTaskDelay</code>）</td></tr><tr><td><strong>中断看门狗（IWDT）</strong></td><td>中断</td><td>中断服务函数运行时间过长</td></tr></tbody></table></div>
+<h4 id='4-触发时会看到什么'>4. 触发时会看到什么</h4>
+<p>串口会打印类似这样的日志，然后<strong>芯片自动重启</strong>：</p>
+<pre><code>Task watchdog got triggered. The following tasks/user did not reset the watchdog in time:
+E (5231) task_wdt:  - IDLE (CPU 0)</code></pre>
+<p><strong>看到 <code>Task watchdog got triggered</code> 就说明是看门狗把芯片重启了</strong>，不是硬件掉电。</p>
+<h4 id='5-什么情况会触发-以及怎么改'>5. 什么情况会触发（以及怎么改）</h4>
+<div class='tw'><table><thead><tr><th>原因</th><th>解决</th></tr></thead><tbody><tr><td>任务里写了死循环，没有 <code>vTaskDelay</code></td><td>循环里加让出 CPU 的延时</td></tr><tr><td>高优先级任务一直不阻塞</td><td>让低优先级任务（尤其是空闲任务）有机会跑</td></tr><tr><td>中断服务函数太长</td><td>中断里只做标记，处理交给任务</td></tr><tr><td>某个操作阻塞时间过长</td><td>缩短单次阻塞时长，或拆成多次做</td></tr></tbody></table></div>
+<p><strong>关键结论</strong>：绝大多数看门狗触发，都是因为<strong>某个循环里忘了写 <code>vTaskDelay()</code></strong>。</p>
+<h4 id='6-怎么用它'>6. 怎么用它</h4>
+<ul><li><strong>默认就是开着的</strong>，正常写程序不用管它，只要记得让出 CPU；</li><li>配置位置：<code>idf.py menuconfig</code> → <code>Component config</code> → <code>ESP System Settings</code> → <code>Task Watchdog</code>；</li><li>长时间计算前可以手动喂一口：<code>esp_task_wdt_reset()</code>；</li><li><strong>调试时可以临时关掉</strong>（menuconfig 里关闭，或调用 <code>esp_task_wdt_deinit()</code>），但<strong>正式产品里绝对不能关</strong> —— 关了之后程序一旦卡死就再也起不来。</li></ul>
+<p><strong>调用流程</strong>：默认就是开着的 → 保证每个循环里都有 <code>vTaskDelay()</code> 之类的让出点 → 长时间计算前 <code>esp_task_wdt_reset()</code> 喂一口 → 调试期可以临时关，正式产品不能关。</p>
+<hr/>
+<h4 id='7-别和-efuse-搞混'>7. 别和 eFuse 搞混</h4>
+<ul><li><strong>看门狗</strong>是软件保险机制，随时可以开关，触发后是"重启"；</li><li><strong>eFuse</strong> 是芯片内部一次性可编程的熔丝（见 6.2 节），写错就报废芯片。</li></ul>
+<p>两者名字里都带"保险"的意味，但完全是两回事。</p>
+<hr/></article>
+</div>
+
+<div id="tipbar">
+  <b>编辑模式已打开。</b>直接点文字就能改、删、加。<br/>
+  改完请点上方 <b>「保存修改」</b>（存在这个浏览器里，下次打开还在），
+  或点 <b>「导出 HTML」</b> 下载成一个新文件，用它替换原来的文件即可。<br/>
+  想变回去就点 <b>「恢复原始」</b>。
+</div>
+<script>
+var DOC = document.getElementById('doc');
+var NAV = document.querySelector('nav');
+var BASENAME = decodeURIComponent(location.pathname.split('/').pop() || 'document').replace(/\.html?$/i, '') || 'document';
+var KEY = 'docedit::' + BASENAME;
+var DOC_SIG = 'a8dbb9a203cf';   /* 构建签名：文件一变，签名就变 */
+
+function flash(msg) {
+  var old = document.querySelector('.flash');
+  if (old) old.remove();
+  var d = document.createElement('div');
+  d.className = 'flash';
+  d.textContent = msg;
+  document.body.appendChild(d);
+  setTimeout(function () { d.remove(); }, 2600);
+}
+
+/* ---------- 编辑模式 ---------- */
+function toggleEdit() {
+  var on = document.body.classList.toggle('editing');
+  DOC.setAttribute('contenteditable', on ? 'true' : 'false');
+  document.getElementById('btnEdit').textContent = on ? '退出编辑' : '编辑内容';
+  document.getElementById('btnSave').hidden = !on;
+  document.getElementById('btnReset').hidden = !localStorage.getItem(KEY);
+  if (on) { flash('编辑模式已打开，改完记得保存或导出'); }
+}
+
+/* ---------- 保存到浏览器（只存浏览器，不改磁盘文件） ---------- */
+function saveLocal() {
+  try {
+    rebuildTOC();
+    var rec = { sig: DOC_SIG, time: new Date().toLocaleString(), html: DOC.innerHTML };
+    localStorage.setItem(KEY, JSON.stringify(rec));
+    showBanner('已保存到浏览器（' + rec.time + '）。<b>注意：这不会改动磁盘上的文件</b>，'
+      + '要发给别人或换电脑，请点「导出 HTML」下载文件。', 'info');
+  } catch (e) {
+    showBanner('这个浏览器不允许自动保存，请用「导出 HTML」把内容保存成文件。', 'warn');
+  }
+}
+
+function resetDoc() {
+  if (!confirm('确定丢弃浏览器里的修改，恢复成文件当前的内容吗？')) return;
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  location.reload();
+}
+
+/* ---------- 启动检查：不再自动覆盖文件内容 ---------- */
+function showBanner(html, kind) {
+  var el = document.getElementById('banner');
+  el.className = 'banner ' + (kind || 'info');
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+function hideBanner() {
+  document.getElementById('banner').style.display = 'none';
+}
+
+function loadSaved() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    var rec = JSON.parse(raw);
+    if (!rec || !rec.html) { localStorage.removeItem(KEY); return; }
+
+    if (rec.sig === DOC_SIG) {
+      showBanner('检测到你在浏览器里保存过的修改（' + rec.time + '）。'
+        + '<button class="primary" onclick="applySaved()">恢复修改</button>'
+        + '<button onclick="dropSaved()">丢弃</button>');
+    } else {
+      showBanner('<b>这个文件已经更新过了。</b>你浏览器里保存的修改是基于旧版本的（' + rec.time
+        + '），直接恢复会看不到新加的内容。'
+        + '<button class="primary" onclick="dropSaved()">丢弃旧修改（推荐）</button>'
+        + '<button onclick="applySaved()">仍要恢复旧修改</button>', 'warn');
+    }
+  } catch (e) {
+    try { localStorage.removeItem(KEY); } catch (e2) {}
+  }
+}
+
+function applySaved() {
+  try {
+    var rec = JSON.parse(localStorage.getItem(KEY));
+    if (rec && rec.html) { DOC.innerHTML = rec.html; rebuildTOC(); bindCopyButtons(); flash('已恢复浏览器里的修改'); }
+  } catch (e) {}
+  hideBanner();
+}
+
+function dropSaved() {
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  hideBanner();
+  flash('已丢弃浏览器副本，当前显示的是文件里的最新内容');
+}
+
+/* ---------- 重建左侧目录 ---------- */
+function rebuildTOC() {
+  if (!NAV) return;
+  var heads = DOC.querySelectorAll('h2, h3');
+  var html = '', cur = null, n = 0;
+  for (var i = 0; i < heads.length; i++) {
+    var h = heads[i];
+    n = n + 1;
+    if (!h.id) h.id = 'e' + n;
+    var txt = h.textContent.trim();
+    var safe = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (h.tagName === 'H2' || cur === null) {
+      if (cur) html += cur.kids.length ? '</details>' : '</a>';
+      cur = { id: h.id, kids: [] };
+      html += cur.kids ? '' : '';
+      html += (h.tagName === 'H2')
+        ? '<details open><summary>' + safe + '</summary>'
+        : '<a class="l2 solo" href="#' + h.id + '">' + safe + '</a>';
+    } else {
+      html += '<a class="l3" href="#' + h.id + '">' + safe + '</a>';
+      cur.kids.push(1);
+    }
+  }
+  if (cur && cur.kids.length) html += '</details>';
+  var head = NAV.querySelector('h3');
+  var tools = NAV.querySelector('.navtools');
+  NAV.innerHTML = '';
+  if (head) NAV.appendChild(head);
+  if (tools) NAV.appendChild(tools);
+  NAV.insertAdjacentHTML('beforeend', html);
+}
+
+/* ---------- 导出 HTML ---------- */
+function exportHTML() {
+  rebuildTOC();
+  var clone = document.documentElement.cloneNode(true);
+  var c = clone.querySelector('#doc');
+  c.innerHTML = DOC.innerHTML;
+  c.removeAttribute('contenteditable');
+  var cb = clone.querySelector('body');
+  if (cb) cb.className = '';
+  var tip = clone.querySelector('#tipbar');
+  if (tip) tip.remove();
+  var out = '<!DOCTYPE html>\n' + clone.outerHTML;
+  download(out, BASENAME + '.html', 'text/html');
+  flash('已导出 ' + BASENAME + '.html，用它替换原文件即可');
+}
+
+/* ---------- 导出 Markdown ---------- */
+function inlineMd(node) {
+  var s = '';
+  for (var i = 0; i < node.childNodes.length; i++) {
+    var c = node.childNodes[i];
+    if (c.nodeType === 3) { s += c.textContent; }
+    else if (c.tagName === 'STRONG' || c.tagName === 'B') { s += '**' + inlineMd(c) + '**'; }
+    else if (c.tagName === 'EM' || c.tagName === 'I') { s += '*' + inlineMd(c) + '*'; }
+    else if (c.tagName === 'CODE') { s += '`' + c.textContent + '`'; }
+    else if (c.tagName === 'BR') { s += '  \n'; }
+    else { s += inlineMd(c); }
+  }
+  return s.replace(/[ \t]*\n[ \t]*/g, ' ').replace(/ {2,}/g, ' ');
+}
+
+function blockMd(node, out) {
+  for (var i = 0; i < node.children.length; i++) {
+    var n = node.children[i], t = n.tagName;
+    if (t === 'H1' || t === 'H2' || t === 'H3' || t === 'H4') {
+      out.push(new Array(+t.charAt(1) + 1).join('#') + ' ' + inlineMd(n).trim(), '');
+    } else if (t === 'P') {
+      out.push(inlineMd(n).trim(), '');
+    } else if (t === 'UL' || t === 'OL') {
+      for (var j = 0; j < n.children.length; j++) out.push('- ' + inlineMd(n.children[j]).trim());
+      out.push('');
+    } else if (t === 'BLOCKQUOTE') {
+      out.push('> ' + inlineMd(n).trim(), '');
+    } else if (t === 'PRE') {
+      var code = n.querySelector('code');
+      out.push('```', (code ? code.textContent : n.textContent).replace(/\n+$/, ''), '```', '');
+    } else if (t === 'TABLE') {
+      var rows = n.querySelectorAll('tr');
+      for (var k = 0; k < rows.length; k++) {
+        var cells = [];
+        for (var m = 0; m < rows[k].children.length; m++) {
+          cells.push(inlineMd(rows[k].children[m]).trim().replace(/\|/g, '\\|'));
+        }
+        out.push('| ' + cells.join(' | ') + ' |');
+        if (k === 0) {
+          var sep = [];
+          for (var q = 0; q < cells.length; q++) sep.push('---');
+          out.push('| ' + sep.join(' | ') + ' |');
+        }
+      }
+      out.push('');
+    } else if (t === 'HR') {
+      out.push('---', '');
+    } else {
+      blockMd(n, out);
+    }
+  }
+}
+
+function exportMD() {
+  var out = [];
+  blockMd(DOC, out);
+  var text = out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  download(text, BASENAME + '.md', 'text/plain');
+  flash('已导出 ' + BASENAME + '.md');
+}
+
+/* ---------- 下载 ---------- */
+function download(text, filename, type) {
+  var blob = new Blob([text], { type: type + ';charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
+}
+
+/* ---------- 代码块一键复制 ---------- */
+function bindCopyButtons() {
+  var pres = document.querySelectorAll('#doc pre');
+  for (var i = 0; i < pres.length; i++) {
+    (function (pre) {
+      if (pre.querySelector('.copybtn')) return;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'copybtn noprint';
+      btn.textContent = '复制';
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        var code = pre.querySelector('code');
+        copyCode(code ? code.textContent : pre.textContent, btn);
+      });
+      pre.appendChild(btn);
+    })(pres[i]);
+  }
+}
+
+function copyCode(text, btn) {
+  function ok() {
+    btn.textContent = '已复制';
+    btn.classList.add('ok');
+    setTimeout(function () { btn.textContent = '复制'; btn.classList.remove('ok'); }, 1500);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.top = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    var done = false;
+    try { done = document.execCommand('copy'); } catch (err) { done = false; }
+    document.body.removeChild(ta);
+    if (done) { ok(); } else { btn.textContent = '请手动复制'; setTimeout(function () { btn.textContent = '复制'; }, 1500); }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(ok, fallback);
+  } else {
+    fallback();
+  }
+}
+
+loadSaved();
+bindCopyButtons();
+</script>
+</body>
+</html>

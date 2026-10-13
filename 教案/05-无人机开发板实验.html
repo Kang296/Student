@@ -1,0 +1,3556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>嵌入式系统设计教案 · 无人机开发板实验</title>
+<style>
+  :root { --ink:#1f2330; --muted:#6b7280; --line:#e2e6f0; --accent:#1f6feb; --bg:#f7f8fc; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+         font-size:15px; line-height:1.85; }
+  header { position:sticky; top:0; z-index:30; background:rgba(255,255,255,.95); backdrop-filter:blur(8px);
+           border-bottom:1px solid var(--line); padding:12px 26px; display:flex; align-items:center; gap:14px; }
+  header b { font-size:16px; }
+  header small { color:var(--muted); font-size:12.5px; }
+  header .sp { margin-left:auto; display:flex; gap:8px; }
+  button { font:inherit; font-size:13px; border:1px solid var(--line); background:#fff; color:var(--ink);
+           border-radius:9px; padding:7px 13px; cursor:pointer; }
+  button:hover { background:#eef2ff; border-color:#c7d2fe; }
+  .wrap { display:flex; align-items:flex-start; gap:28px; max-width:1280px; margin:0 auto; padding:26px 26px 90px; }
+  nav { position:sticky; top:78px; flex:0 0 268px; max-height:calc(100vh - 110px); overflow:auto;
+        background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 12px;
+        box-shadow:0 1px 3px rgba(20,30,60,.05); }
+  nav h3 { margin:2px 6px 10px; font-size:12.5px; color:var(--muted); letter-spacing:1px; font-weight:600; }
+  nav a { display:block; text-decoration:none; color:#3c4356; font-size:13px; padding:5px 9px;
+          border-radius:8px; border-left:3px solid transparent; }
+  nav a:hover { background:#f1f4ff; color:var(--accent); }
+  nav a.l3 { padding-left:24px; font-size:12.5px; color:#5c6478; }
+  nav details { margin:2px 0; }
+  nav summary { cursor:pointer; font-size:13px; font-weight:600; padding:5px 8px; border-radius:8px;
+                color:#2a3145; list-style:none; }
+  nav summary::-webkit-details-marker { display:none; }
+  nav summary::before { content:"\25B8"; display:inline-block; width:14px; color:#9aa3b8;
+                        transition:.15s; }
+  nav details[open] > summary::before { transform:rotate(90deg); }
+  nav summary:hover { background:#f1f4ff; color:var(--accent); }
+  nav a.l2.solo { font-weight:600; }
+  .navtools { display:flex; gap:6px; margin:0 4px 10px; }
+  .navtools button { flex:1; padding:5px 8px; font-size:12px; }
+  article { flex:1 1 auto; min-width:0; background:#fff; border:1px solid var(--line); border-radius:16px;
+            padding:34px 40px 60px; box-shadow:0 2px 10px rgba(20,30,60,.05); }
+  article h1 { font-size:26px; margin:0 0 6px; padding-bottom:14px; border-bottom:3px solid var(--accent); }
+  article h2 { font-size:21px; margin:44px 0 14px; padding:8px 0 8px 14px; border-left:6px solid var(--accent);
+               background:linear-gradient(90deg,rgba(0,0,0,.035),transparent); border-radius:0 8px 8px 0; }
+  article h1, article h2, article h3 { scroll-margin-top:80px; }
+  article h3 { font-size:17px; margin:26px 0 10px; color:#2a3145; }
+  article p { margin:10px 0; }
+  article strong { color:#111827; }
+  article code { background:#f2f4fa; border:1px solid #e6e9f2; border-radius:5px; padding:1px 5px;
+                 font-family:"Cascadia Mono",Consolas,"Courier New",monospace; font-size:13px; color:#b5305f; }
+  pre { background:#22262f; color:#e6e9f2; border-radius:12px; padding:18px 20px; overflow:auto; line-height:1.6; }
+  pre code { background:none; border:none; color:inherit; padding:0; font-size:13px; }
+  blockquote { margin:16px 0; padding:12px 18px; background:#f4f7ff; border-left:5px solid var(--accent);
+               border-radius:0 10px 10px 0; color:#3d4763; }
+  blockquote p { margin:0; }
+  hr { border:none; border-top:1px dashed var(--line); margin:34px 0; }
+  ul { margin:10px 0; padding-left:0; list-style:none; }
+  li { position:relative; padding:4px 0 4px 20px; }
+  li::before { content:""; position:absolute; left:4px; top:14px; width:6px; height:6px; border-radius:50%;
+               background:var(--accent); opacity:.55; }
+  ol { margin:10px 0; padding-left:34px; }
+  ol li { list-style:decimal; padding:4px 0; }
+  ol li::before { content:none; }
+  .tw { overflow-x:auto; margin:16px 0; border-radius:12px; border:1px solid var(--line); }
+  table { border-collapse:collapse; width:100%; min-width:520px; font-size:14px; }
+  th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:9px 12px;
+           text-align:left; vertical-align:top; }
+  th { background:#f2f5fd; font-weight:600; white-space:nowrap; }
+  tr:last-child td { border-bottom:none; }
+  th:last-child, td:last-child { border-right:none; }
+  tbody tr:hover { background:#fafbff; }
+  #tipbar { display:none; margin:0 0 18px; padding:10px 14px; border-radius:10px; font-size:13px;
+            background:#fff8dc; border:1px solid #f0c419; color:#6b5300; }
+  body.editing #tipbar { display:block; }
+  body.editing #doc { outline:2px dashed #f0c419; outline-offset:16px; border-radius:8px; }
+  body.editing #doc :is(h1,h2,h3,h4):hover,
+  body.editing #doc :is(p,li,td,th):hover { background:#fffbe6; }
+  #doc[contenteditable="true"] { cursor:text; }
+  .banner { max-width:1280px; margin:16px auto -8px; padding:12px 18px; border-radius:12px;
+            font-size:13.5px; line-height:1.7; border:1px solid #d7ddea; background:#f3f6ff; color:#2a3145; }
+  .banner.warn { background:#fff8dc; border-color:#f0c419; color:#6b5300; }
+  .banner button { margin-left:8px; padding:5px 12px; font-size:12.5px; }
+  .banner button.primary { background:#1f6feb; border-color:#1f6feb; color:#fff; }
+  .pagenav { display:flex; gap:6px; flex-wrap:wrap; }
+  .pagenav a { font-size:12.5px; text-decoration:none; color:#3c4356; border:1px solid var(--line);
+               background:#fff; border-radius:9px; padding:6px 11px; }
+  .pagenav a:hover { background:#eef2ff; border-color:#c7d2fe; color:var(--accent); }
+  .pagenav a.cur { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .flash { position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:99;
+           background:#1f2330; color:#fff; padding:10px 18px; border-radius:10px; font-size:13px;
+           box-shadow:0 6px 20px rgba(0,0,0,.25); }
+  #doc a { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(31,111,235,.35); }
+  #doc a:hover { border-bottom-color:var(--accent); }
+  nav a.l4 { padding-left:40px; font-size:11.5px; color:#6b7385; }
+  .fig { margin:18px 0; text-align:center; }
+  .fig img { max-width:100%; height:auto; border:1px solid var(--line); border-radius:10px;
+             background:#fff; }
+  .fig figcaption { margin-top:8px; font-size:13px; color:var(--muted); }
+  #doc pre { position:relative; }
+  .copybtn { position:absolute; top:8px; right:8px; z-index:5; padding:3px 10px; font-size:12px;
+             border-radius:7px; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14);
+             color:#e6e9f2; cursor:pointer; opacity:0; transition:.15s; user-select:none;
+             font-family:inherit; line-height:1.4; }
+  #doc pre:hover .copybtn { opacity:1; }
+  .copybtn:hover { background:rgba(255,255,255,.28); }
+  .copybtn.ok { background:#2e7d32; border-color:#2e7d32; color:#fff; opacity:1; }
+  @media (max-width:900px) { .copybtn { opacity:1; } }
+  @media (max-width:900px) {
+    .wrap { flex-direction:column; padding:16px; }
+    nav { position:static; flex:none; width:100%; max-height:none; }
+    article { padding:22px 18px 40px; }
+  }
+  @media print {
+    body { background:#fff; font-size:11.5pt; }
+    header, nav, .noprint { display:none !important; }
+    .wrap { display:block; max-width:none; padding:0; }
+    article { border:none; box-shadow:none; border-radius:0; padding:0; }
+    article h1 { font-size:20pt; }
+    article h2 { font-size:15pt; margin-top:0; page-break-before:always; page-break-after:avoid; }
+    article h1 + blockquote + hr + h2, article h2:first-of-type { page-break-before:avoid; }
+    article h3 { font-size:12.5pt; page-break-after:avoid; }
+    table, pre, blockquote, li { page-break-inside:avoid; }
+    th { background:#eee; }
+    pre { background:#f4f4f6; color:#111; border:1px solid #ccc; }
+    @page { margin:14mm 12mm; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <b>嵌入式系统设计教案 · 无人机开发板实验</b><small>8 个实验：WiFi · 惯导 · 光流 · 摄像头 · 气压计 · 激光测距 · 姿态解算 ｜ 共 7 册</small>
+<div class="pagenav"><a href="00-索引.html">索引</a><a href="01-课程与基础准备.html">01 基础</a><a href="02-外设与通信.html">02 外设</a><a href="03-无线与系统.html">03 无线</a><a href="04-小车开发板实验.html">04 小车</a><a href="05-无人机开发板实验.html" class="cur">05 无人机</a><a href="06-综合项目与迁移.html">06 综合</a><a href="07-附录.html">07 附录</a></div>
+  <span class="sp">
+    <button id="btnEdit" onclick="toggleEdit()">编辑内容</button>
+    <button id="btnSave" onclick="saveLocal()" hidden>保存修改</button>
+    <button id="btnHtml" onclick="exportHTML()">导出 HTML</button>
+    <button id="btnMd" onclick="exportMD()">导出 Markdown</button>
+    <button id="btnReset" onclick="resetDoc()" hidden>恢复原始</button>
+    <button onclick="window.print()">打印 / PDF</button>
+  </span>
+</header>
+<div id="banner" class="banner" style="display:none"></div>
+<div class="wrap">
+  <nav>
+    <h3>目 录</h3>
+    <div class="navtools noprint">
+      <button onclick="document.querySelectorAll('nav details').forEach(d=>d.open=true)">全部展开</button>
+      <button onclick="document.querySelectorAll('nav details').forEach(d=>d.open=false)">全部折叠</button>
+    </div>
+    <details open><summary>十、无人机开发板实验</summary><a class='l3' href='#实验一-esp32-wifi-ap-模式实验'>实验一 ESP32 WiFi AP 模式实验</a><a class='l4' href='#实验目的'>实验目的</a><a class='l4' href='#实验原理'>实验原理</a><a class='l4' href='#参考代码'>参考代码</a><a class='l4' href='#实验现象'>实验现象</a><a class='l4' href='#思考题'>思考题</a><a class='l3' href='#实验二-icm20602-惯性数据采集实验'>实验二 ICM20602 惯性数据采集实验</a><a class='l4' href='#实验目的-2'>实验目的</a><a class='l4' href='#实验原理-2'>实验原理</a><a class='l4' href='#硬件说明'>硬件说明</a><a class='l4' href='#参考代码-2'>参考代码</a><a class='l4' href='#实验现象-2'>实验现象</a><a class='l4' href='#思考题-2'>思考题</a><a class='l3' href='#实验三-pmw3901-光流传感器-spi-采集实验'>实验三 PMW3901 光流传感器 SPI 采集实验</a><a class='l4' href='#实验目的-3'>实验目的</a><a class='l4' href='#实验原理-3'>实验原理</a><a class='l4' href='#硬件说明-2'>硬件说明</a><a class='l4' href='#参考代码-3'>参考代码</a><a class='l4' href='#实验现象-3'>实验现象</a><a class='l4' href='#思考题-3'>思考题</a><a class='l3' href='#实验四-imx219-摄像头图像采集实验'>实验四 IMX219 摄像头图像采集实验</a><a class='l4' href='#实验目的-4'>实验目的</a><a class='l4' href='#实验原理-4'>实验原理</a><a class='l4' href='#参考代码-4'>参考代码</a><a class='l4' href='#实验现象-4'>实验现象</a><a class='l4' href='#思考题-4'>思考题</a><a class='l3' href='#实验五-spl06-001-气压计-spi-采集实验'>实验五 SPL06-001 气压计 SPI 采集实验</a><a class='l4' href='#实验目的-5'>实验目的</a><a class='l4' href='#实验原理-5'>实验原理</a><a class='l4' href='#硬件说明-3'>硬件说明</a><a class='l4' href='#参考代码-5'>参考代码</a><a class='l4' href='#实验现象-5'>实验现象</a><a class='l4' href='#思考题-5'>思考题</a><a class='l3' href='#实验六-vl53l0x-激光测距-i2c-采集实验'>实验六 VL53L0X 激光测距 I2C 采集实验</a><a class='l4' href='#实验目的-6'>实验目的</a><a class='l4' href='#实验原理-6'>实验原理</a><a class='l4' href='#硬件说明-4'>硬件说明</a><a class='l4' href='#参考代码-6'>参考代码</a><a class='l4' href='#实验现象-6'>实验现象</a><a class='l4' href='#思考题-6'>思考题</a><a class='l3' href='#实验七-上位机解析陀螺仪数据计算偏航角'>实验七 上位机解析陀螺仪数据计算偏航角</a><a class='l4' href='#实验目的-7'>实验目的</a><a class='l4' href='#实验原理-7'>实验原理</a><a class='l4' href='#硬件说明-5'>硬件说明</a><a class='l4' href='#参考代码-7'>参考代码</a><a class='l4' href='#实验现象-7'>实验现象</a><a class='l4' href='#思考题-7'>思考题</a><a class='l3' href='#实验八-上位机解析光流数据计算相对位移'>实验八 上位机解析光流数据计算相对位移</a><a class='l4' href='#实验目的-8'>实验目的</a><a class='l4' href='#实验原理-8'>实验原理</a><a class='l4' href='#参考代码-8'>参考代码</a><a class='l4' href='#实验现象-8'>实验现象</a><a class='l4' href='#思考题-8'>思考题</a></details>
+  </nav>
+  <article id="doc"><h1>嵌入式系统设计教案 · 无人机开发板实验</h1>
+<blockquote><p><strong>教学平台</strong>：ESP32-S3 核心板 · ESP32 智能小车开发板 · ESP32-S3 无人机开发板<br/><strong>软件框架</strong>：ESP-IDF（乐鑫官方框架）<br/><strong>代码说明</strong>：第 1~3、6 册的教学示例只使用 Espressif 官方组件（<code>driver</code> / <code>esp_wifi</code> / <code>esp_ble</code> / <code>esp_http_server</code> / <code>esp_camera</code> / <code>freertos</code>）；第 4、5 册的实验代码取自配套开发板工程，其中包含课程自研组件（<code>icm20602</code>、<code>PMW3901</code>、<code>spl06001</code>、<code>VL53L0X</code> 等）以及电脑端 Qt 上位机程序。</p></blockquote>
+<hr/>
+<h2 id='十-无人机开发板实验'>十、无人机开发板实验</h2>
+<blockquote><p>平台资源：ICM20602 六轴惯性传感器（I2C：SDA 41 / SCL 42）、PMW3901 光流传感器（SPI：SCLK 7 / MOSI 15 / MISO 16 / NCS 6）、SPL06-001 气压计（SPI：SCK 7 / SDA 15 / SDO 16 / CSB 8）、VL53L0X 激光测距（I2C：SCL 42 / SDA 41）、IMX219 摄像头、板载 WiFi 与 BLE。</p></blockquote>
+<h3 id='实验一-esp32-wifi-ap-模式实验'>实验一　ESP32 WiFi AP 模式实验</h3>
+<h4 id='实验目的'>实验目的</h4>
+<ul><li>掌握 AP 模式热点的创建与参数配置。</li><li>掌握基于 UDP / TCP 的数据收发流程。</li><li>实现无人机平台与上位机的无线数据交互通道。</li></ul>
+<h4 id='实验原理'>实验原理</h4>
+<p>AP 模式下设备自身作为无线接入点。无人机的飞行数据通过 UDP 周期上报，控制指令通过 TCP 可靠下发，两条链路分别满足"高频低延迟"与"可靠不丢包"两类需求。事件回调用于监控设备接入状态。</p>
+<h4 id='参考代码'>参考代码</h4>
+<p><strong><code>main/main.c</code></strong></p>
+<pre><code>#include &lt;string.h&gt;
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_system.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_log.h"
+#include "nvs_flash.h"
+#include "esp_wifi_types.h"
+#include &lt;sys/socket.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;unistd.h&gt;
+
+static const char *TAG = "ESP32_AP";
+
+/* AP 配置 */
+#define EXAMPLE_ESP_WIFI_SSID "ESP32_AP"
+#define EXAMPLE_ESP_WIFI_PASS "12345678"
+#define EXAMPLE_ESP_WIFI_CHANNEL 1
+#define EXAMPLE_MAX_STA_CONN 4
+
+// UDP服务器端口
+#define UDP_SERVER_PORT 8081
+// TCP服务器端口
+#define TCP_SERVER_PORT 8080
+
+/* WiFi 事件处理函数 */
+static void wifi_event_handler(void *arg, esp_event_base_t event_base,
+                               int32_t event_id, void *event_data)
+{
+    if (event_base == WIFI_EVENT &amp;&amp; event_id == WIFI_EVENT_AP_STACONNECTED)
+    {
+        wifi_event_ap_staconnected_t *event =
+            (wifi_event_ap_staconnected_t *)event_data;
+        ESP_LOGI(TAG, "Station 连接: MAC: %02X:%02X:%02X:%02X:%02X:%02X, AID=%d",
+                 event-&gt;mac[0], event-&gt;mac[1], event-&gt;mac[2],
+                 event-&gt;mac[3], event-&gt;mac[4], event-&gt;mac[5],
+                 event-&gt;aid);
+    }
+    else if (event_base == WIFI_EVENT &amp;&amp; event_id == WIFI_EVENT_AP_STADISCONNECTED)
+    {
+        wifi_event_ap_stadisconnected_t *event =
+            (wifi_event_ap_stadisconnected_t *)event_data;
+        ESP_LOGI(TAG, "Station 断开: MAC: %02X:%02X:%02X:%02X:%02X:%02X, AID=%d",
+                 event-&gt;mac[0], event-&gt;mac[1], event-&gt;mac[2],
+                 event-&gt;mac[3], event-&gt;mac[4], event-&gt;mac[5],
+                 event-&gt;aid);
+    }
+}
+
+/**
+ * @brief UDP服务器任务
+ */
+static void udp_server_task(void *pvParameters)
+{
+    int server_fd;
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t client_len = sizeof(client_addr);
+    char rx_buffer[128];
+
+    // 1. 创建socket（UDP）
+    server_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (server_fd &lt; 0)
+    {
+        ESP_LOGE(TAG, "socket 创建失败");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    // 2. 绑定端口
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    server_addr.sin_port = htons(UDP_SERVER_PORT);
+
+    if (bind(server_fd, (struct sockaddr *)&amp;server_addr, sizeof(server_addr)) &lt; 0)
+    {
+        ESP_LOGE(TAG, "bind 端口 %d 失败", UDP_SERVER_PORT);
+        close(server_fd);
+        vTaskDelete(NULL);
+        return;
+    }
+
+    ESP_LOGI(TAG, "UDP服务器已启动，端口：%d", UDP_SERVER_PORT);
+
+    while (1)
+    {
+        // 3. 阻塞接收数据，并记录发送方地址
+        int len = recvfrom(server_fd, rx_buffer, sizeof(rx_buffer) - 1, 0,
+                           (struct sockaddr *)&amp;client_addr, &amp;client_len);
+        if (len &gt; 0)
+        {
+            rx_buffer[len] = '\0';
+            ESP_LOGI(TAG, "收到客户端消息(%s:%d): %s",
+                     inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), rx_buffer);
+            // 回发数据给发送方
+            sendto(server_fd, "OK\r\n", 4, 0,
+                   (struct sockaddr *)&amp;client_addr, client_len);
+        }
+        else if (len &lt; 0)
+        {
+            ESP_LOGE(TAG, "接收数据失败");
+        }
+    }
+    close(server_fd);
+    vTaskDelete(NULL);
+}
+
+/**
+ * @brief TCP服务器任务
+ */
+static void tcp_server_task(void *pvParameters)
+{
+    int server_fd, client_fd;
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t client_len = sizeof(client_addr);
+    char rx_buffer[128];
+
+    // 1. 创建socket（TCP）
+    server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd &lt; 0)
+    {
+        ESP_LOGE(TAG, "socket 创建失败");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    // 2. 绑定端口
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    server_addr.sin_port = htons(TCP_SERVER_PORT);
+
+    if (bind(server_fd, (struct sockaddr *)&amp;server_addr, sizeof(server_addr)) &lt; 0)
+    {
+        ESP_LOGE(TAG, "bind 端口 %d 失败", TCP_SERVER_PORT);
+        close(server_fd);
+        vTaskDelete(NULL);
+        return;
+    }
+
+    // 3. 开启监听，等待客户端连接
+    listen(server_fd, 1);
+    ESP_LOGI(TAG, "TCP服务器已启动，端口：%d", TCP_SERVER_PORT);
+
+    while (1)
+    {
+        // 4. 阻塞等待客户端接入
+        client_fd = accept(server_fd, (struct sockaddr *)&amp;client_addr, &amp;client_len);
+        if (client_fd &gt;= 0)
+        {
+            ESP_LOGI(TAG, "客户端已接入: %s:%d",
+                     inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+            while (1)
+            {
+                // 接收电脑发来的数据
+                int len = recv(client_fd, rx_buffer, sizeof(rx_buffer) - 1, 0);
+                if (len &gt; 0)
+                {
+                    rx_buffer[len] = '\0';
+                    ESP_LOGI(TAG, "收到客户端消息: %s", rx_buffer);
+                    // 回发数据给电脑
+                    send(client_fd, "OK\r\n", 4, 0);
+                }
+                else if (len == 0 || len &lt; 0)
+                {
+                    ESP_LOGI(TAG, "客户端断开连接");
+                    close(client_fd);
+                    break;
+                }
+            }
+        }
+    }
+    close(server_fd);
+    vTaskDelete(NULL);
+}
+
+void wifi_init_softap(void)
+{
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_netif_create_default_wifi_ap();
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&amp;cfg));
+
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(
+        WIFI_EVENT,
+        ESP_EVENT_ANY_ID,
+        &amp;wifi_event_handler,
+        NULL,
+        NULL));
+
+    wifi_config_t wifi_config = {
+        .ap = {
+            .ssid = EXAMPLE_ESP_WIFI_SSID,
+            .ssid_len = strlen(EXAMPLE_ESP_WIFI_SSID),
+            .channel = EXAMPLE_ESP_WIFI_CHANNEL,
+            .password = EXAMPLE_ESP_WIFI_PASS,
+            .max_connection = EXAMPLE_MAX_STA_CONN,
+            .authmode = WIFI_AUTH_WPA_WPA2_PSK},
+    };
+    if (strlen(EXAMPLE_ESP_WIFI_PASS) == 0)
+    {
+        wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+    }
+
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &amp;wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+
+    ESP_LOGI(TAG, "WiFi AP 启动完成");
+    ESP_LOGI(TAG, "SSID: %s", EXAMPLE_ESP_WIFI_SSID);
+    ESP_LOGI(TAG, "Password: %s", EXAMPLE_ESP_WIFI_PASS);
+
+    // 创建UDP服务器任务
+    xTaskCreate(udp_server_task, "udp_server", 4096, NULL, 5, NULL);
+    // 创建TCP服务器任务
+    xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 5, NULL);
+}
+
+void app_main(void)
+{
+    ESP_LOGI(TAG, "ESP32 AP WiFi 实验启动");
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
+        ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
+    wifi_init_softap();
+}</code></pre>
+<h4 id='实验现象'>实验现象</h4>
+<ul><li>上位机连接热点后可分别通过 UDP 8081 与 TCP 8080 端口通信。</li><li>串口打印客户端接入、指令内容与断开日志。</li></ul>
+<h4 id='思考题'>思考题</h4>
+<ol><li>飞行数据上报为什么优先选择 UDP？</li></ol>
+<ol><li>控制指令通道为什么优先选择 TCP？</li></ol>
+<ol><li>TCP 服务器为什么需要循环调用 <code>accept()</code>？</li></ol>
+<hr/>
+<h3 id='实验二-icm20602-惯性数据采集实验'>实验二　ICM20602 惯性数据采集实验</h3>
+<h4 id='实验目的-2'>实验目的</h4>
+<ul><li>掌握 I2C 总线的初始化与设备挂载流程。</li><li>掌握依据数据手册读取寄存器的方法。</li><li>完成三轴加速度与三轴角速度的采集。</li></ul>
+<h4 id='实验原理-2'>实验原理</h4>
+<p>ICM20602 通过 I2C 提供寄存器访问接口。数据寄存器为高字节在前，需拼接为 16 位有符号数。原始值除以灵敏度即得到物理量：加速度除以 <code>LSB/g</code> 换算为 g，再乘以 9.8 换算为 m/s²；角速度除以 <code>LSB/(°/s)</code> 换算为 °/s，再乘以 π/180 换算为 rad/s。</p>
+<h4 id='硬件说明'>硬件说明</h4>
+<div class='tw'><table><thead><tr><th>器件</th><th>引脚</th><th>说明</th></tr></thead><tbody><tr><td>板载 ICM20602</td><td>I2C_SDA = GPIO41，I2C_SCL = GPIO42</td><td>已在板内连接，无需外部跳线</td></tr></tbody></table></div>
+<h4 id='参考代码-2'>参考代码</h4>
+<blockquote><p><strong>工程配置</strong>：<code>main/CMakeLists.txt</code> 的 <code>REQUIRES</code> 需声明 <code>driver icm20602</code>。</p></blockquote>
+<p><strong><code>main/main.c</code></strong></p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+#include "esp_log.h"
+#include "esp_err.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/i2c_master.h"
+#include "icm20602.h"
+
+static const char *TAG = "MAIN";
+
+// I2C 引脚
+#define I2C_SDA_GPIO 41
+#define I2C_SCL_GPIO 42
+#define I2C_FREQ_HZ 400000
+
+// 测试打印周期
+#define TEST_PERIOD_MS 100
+
+void app_main(void)
+{
+    esp_err_t ret;
+
+    //  1. 初始化 I2C 总线
+    i2c_master_bus_config_t bus_cfg = {
+        .clk_source = I2C_CLK_SRC_DEFAULT,
+        .i2c_port = I2C_NUM_0,
+        .scl_io_num = I2C_SCL_GPIO,
+        .sda_io_num = I2C_SDA_GPIO,
+        .glitch_ignore_cnt = 7,
+        .flags.enable_internal_pullup = true,
+    };
+    i2c_master_bus_handle_t bus = NULL;
+    ret = i2c_new_master_bus(&amp;bus_cfg, &amp;bus);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "I2C bus init failed: %s", esp_err_to_name(ret));
+        return;
+    }
+    ESP_LOGI(TAG, "I2C bus OK (SDA=%d, SCL=%d)", I2C_SDA_GPIO, I2C_SCL_GPIO);
+
+    //  2. 挂载 ICM20602 设备
+    i2c_device_config_t dev_cfg = {
+        .dev_addr_length = I2C_ADDR_BIT_7,
+        .device_address = ICM20602_ADDR_LOW, // 0x68, SA0 接地
+        .scl_speed_hz = I2C_FREQ_HZ,
+    };
+    i2c_master_dev_handle_t i2c_dev = NULL;
+    ret = i2c_master_bus_add_device(bus, &amp;dev_cfg, &amp;i2c_dev);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Add ICM20602 device failed: %s", esp_err_to_name(ret));
+        return;
+    }
+
+    //  3. 初始化传感器（内部会做 WHO_AM_I 校验 + 软复位 + 量程配置）
+    icm20602_config_t cfg;
+    icm20602_init_default_config(&amp;cfg);
+    // 可按需修改量程，例如：
+    // cfg.acc_range  = ICM20602_ACC_2G;
+    // cfg.gyro_range = ICM20602_GYRO_1000DPS;
+
+    icm20602_t imu;
+    ret = icm20602_init(&amp;imu, i2c_dev, &amp;cfg);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "ICM20602 init failed: %s", esp_err_to_name(ret));
+        return;
+    }
+    ESP_LOGI(TAG, "ICM20602 init OK");
+
+    //  4. 循环读取并打印
+    icm20602_raw_data_t raw;
+    icm20602_data_t data;
+    uint32_t sample = 0;
+
+    while (1)
+    {
+        ret = icm20602_read_raw(&amp;imu, &amp;raw);
+        if (ret != ESP_OK)
+        {
+            ESP_LOGE(TAG, "read raw failed: %s", esp_err_to_name(ret));
+        }
+        else
+        {
+            ESP_LOGI(TAG,
+                     "[%lu] RAW  ax=%6d ay=%6d az=%6d | gx=%6d gy=%6d gz=%6d | temp=%6d",
+                     (unsigned long)sample,
+                     raw.acc_x, raw.acc_y, raw.acc_z,
+                     raw.gyro_x, raw.gyro_y, raw.gyro_z,
+                     raw.temp);
+        }
+
+        ret = icm20602_read_data(&amp;imu, &amp;data);
+        if (ret != ESP_OK)
+        {
+            ESP_LOGE(TAG, "read data failed: %s", esp_err_to_name(ret));
+        }
+        else
+        {
+            ESP_LOGI(TAG,
+                     "[%lu] PHY  ax=%+.3fg ay=%+.3fg az=%+.3fg | "
+                     "gx=%+7.2f gy=%+7.2f gz=%+7.2f dps | temp=%+.1f C",
+                     (unsigned long)sample,
+                     data.acc_x_g, data.acc_y_g, data.acc_z_g,
+                     data.gyro_x_dps, data.gyro_y_dps, data.gyro_z_dps,
+                     data.temp_c);
+        }
+
+        sample++;
+        vTaskDelay(pdMS_TO_TICKS(TEST_PERIOD_MS));
+    }
+}</code></pre>
+<p><strong><code>components/icm20602/icm20602.h</code></strong></p>
+<pre><code>#pragma once
+
+#include &lt;stdint.h&gt;
+#include "driver/i2c_master.h"
+#include "esp_err.h"
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// I2C 地址
+#define ICM20602_ADDR_LOW     0x68    // SA0=GND
+#define ICM20602_ADDR_HIGH    0x69    // SA0=VDD
+
+// WHO_AM_I 期望值
+#define ICM20602_WHO_AM_I_REG 0x75
+#define ICM20602_WHO_AM_I_VAL 0x12
+
+  
+// 原始数据 (ADC 值)
+typedef struct {
+    int16_t acc_x;
+    int16_t acc_y;
+    int16_t acc_z;
+    int16_t temp;
+    int16_t gyro_x;
+    int16_t gyro_y;
+    int16_t gyro_z;
+} icm20602_raw_data_t;
+
+  
+// 物理量数据
+typedef struct {
+    float acc_x_g;
+    float acc_y_g;
+    float acc_z_g;
+    float temp_c;
+    float gyro_x_dps;
+    float gyro_y_dps;
+    float gyro_z_dps;
+} icm20602_data_t;
+
+  
+// 量程枚举
+typedef enum {
+    ICM20602_ACC_2G  = 0x00,   // ±2g
+    ICM20602_ACC_4G  = 0x08,   // ±4g
+    ICM20602_ACC_8G  = 0x10,   // ±8g
+    ICM20602_ACC_16G = 0x18,   // ±16g
+} icm20602_acc_range_t;
+
+typedef enum {
+    ICM20602_GYRO_250DPS  = 0x00,   // ±250 dps
+    ICM20602_GYRO_500DPS  = 0x08,   // ±500 dps
+    ICM20602_GYRO_1000DPS = 0x10,   // ±1000 dps
+    ICM20602_GYRO_2000DPS = 0x18,   // ±2000 dps
+} icm20602_gyro_range_t;
+
+  
+// 配置
+typedef struct {
+    uint8_t             i2c_address;    // 默认 0x68
+    icm20602_acc_range_t  acc_range;    // 默认 ±8g
+    icm20602_gyro_range_t gyro_range;   // 默认 ±2000dps
+    uint8_t             sample_rate_div; // 默认 9 → ~100Hz
+} icm20602_config_t;
+
+  
+// 设备句柄
+typedef struct {
+    i2c_master_dev_handle_t i2c_dev;
+    uint8_t                 i2c_address;
+    float                   acc_scale;   // LSB/g
+    float                   gyro_scale;  // LSB/(dps)
+    bool                    initialized;
+} icm20602_t;
+
+// API
+
+void icm20602_init_default_config(icm20602_config_t *config);
+
+esp_err_t icm20602_init(icm20602_t *dev, i2c_master_dev_handle_t i2c_dev,
+                        const icm20602_config_t *config);
+
+esp_err_t icm20602_read_raw(icm20602_t *dev, icm20602_raw_data_t *raw);
+esp_err_t icm20602_read_data(icm20602_t *dev, icm20602_data_t *data);
+
+#ifdef __cplusplus
+}
+#endif</code></pre>
+<p><strong><code>components/icm20602/icm20602.c</code></strong></p>
+<pre><code>#include "icm20602.h"
+#include &lt;string.h&gt;
+#include &lt;math.h&gt;
+#include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+static const char *TAG = "ICM20602";
+
+// 寄存器
+#define REG_SMPLRT_DIV 0x19
+#define REG_CONFIG 0x1A
+#define REG_GYRO_CONFIG 0x1B
+#define REG_ACCEL_CONFIG 0x1C
+#define REG_ACCEL_CONFIG2 0x1D
+#define REG_ACCEL_XOUT_H 0x3B
+#define REG_PWR_MGMT_1 0x6B
+#define REG_PWR_MGMT_2 0x6C
+
+// I2C 底层
+static esp_err_t write_reg(icm20602_t *dev, uint8_t reg, uint8_t value)
+{
+    uint8_t buf[2] = {reg, value};
+    return i2c_master_transmit(dev-&gt;i2c_dev, buf, 2, 100);
+}
+
+static esp_err_t read_regs(icm20602_t *dev, uint8_t reg, uint8_t *data, size_t len)
+{
+    return i2c_master_transmit_receive(dev-&gt;i2c_dev, &amp;reg, 1, data, len, 100);
+}
+
+static int16_t make_int16(uint8_t hi, uint8_t lo)
+{
+    return (int16_t)(((uint16_t)hi &lt;&lt; 8) | lo);
+}
+
+// 量程
+static float acc_scale_from_range(icm20602_acc_range_t r)
+{
+    switch (r)
+    {
+    case ICM20602_ACC_2G:
+        return 16384.0f;
+    case ICM20602_ACC_4G:
+        return 8192.0f;
+    case ICM20602_ACC_8G:
+        return 4096.0f;
+    case ICM20602_ACC_16G:
+        return 2048.0f;
+    default:
+        return 4096.0f;
+    }
+}
+
+static float gyro_scale_from_range(icm20602_gyro_range_t r)
+{
+    switch (r)
+    {
+    case ICM20602_GYRO_250DPS:
+        return 131.0f;
+    case ICM20602_GYRO_500DPS:
+        return 65.5f;
+    case ICM20602_GYRO_1000DPS:
+        return 32.8f;
+    case ICM20602_GYRO_2000DPS:
+        return 16.4f;
+    default:
+        return 16.4f;
+    }
+}
+
+// 公开 API
+void icm20602_init_default_config(icm20602_config_t *config)
+{
+    config-&gt;i2c_address = ICM20602_ADDR_LOW;
+    config-&gt;acc_range = ICM20602_ACC_8G;
+    config-&gt;gyro_range = ICM20602_GYRO_2000DPS;
+    config-&gt;sample_rate_div = 9; // ~100Hz
+}
+
+esp_err_t icm20602_init(icm20602_t *dev, i2c_master_dev_handle_t i2c_dev,
+                        const icm20602_config_t *config)
+{
+    if (!dev || !i2c_dev || !config)
+        return ESP_ERR_INVALID_ARG;
+
+    memset(dev, 0, sizeof(*dev));
+    dev-&gt;i2c_dev = i2c_dev;
+    dev-&gt;i2c_address = config-&gt;i2c_address;
+
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    //  WHO_AM_I 检查
+    uint8_t who = 0;
+    esp_err_t ret = read_regs(dev, ICM20602_WHO_AM_I_REG, &amp;who, 1);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "WHO_AM_I read failed: %s", esp_err_to_name(ret));
+        return ret;
+    }
+    ESP_LOGI(TAG, "WHO_AM_I = 0x%02X (expect 0x%02X)", who, ICM20602_WHO_AM_I_VAL);
+
+    if (who != ICM20602_WHO_AM_I_VAL)
+    {
+        ESP_LOGE(TAG, "WHO_AM_I mismatch! Check wiring/address.");
+        return ESP_ERR_NOT_FOUND;
+    }
+
+    //  软件复位
+    ret = write_reg(dev, REG_PWR_MGMT_1, 0x80);
+    if (ret != ESP_OK)
+        return ret;
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    //  退出睡眠 + 时钟源 = PLL
+    ret = write_reg(dev, REG_PWR_MGMT_1, 0x01);
+    if (ret != ESP_OK)
+        return ret;
+    vTaskDelay(pdMS_TO_TICKS(50));
+
+    //  开启加速度计 XYZ + 陀螺仪 XYZ
+    ret = write_reg(dev, REG_PWR_MGMT_2, 0x00);
+    if (ret != ESP_OK)
+        return ret;
+
+    //  采样率分频
+    write_reg(dev, REG_SMPLRT_DIV, config-&gt;sample_rate_div);
+
+    //  低通滤波
+    write_reg(dev, REG_CONFIG, 0x03);
+
+    //  陀螺仪量程
+    write_reg(dev, REG_GYRO_CONFIG, (uint8_t)config-&gt;gyro_range);
+
+    //  加速度计量程
+    write_reg(dev, REG_ACCEL_CONFIG, (uint8_t)config-&gt;acc_range);
+
+    //  加速度计低通滤波
+    write_reg(dev, REG_ACCEL_CONFIG2, 0x03);
+
+    //  计算比例因子
+    dev-&gt;acc_scale = acc_scale_from_range(config-&gt;acc_range);
+    dev-&gt;gyro_scale = gyro_scale_from_range(config-&gt;gyro_range);
+
+    dev-&gt;initialized = true;
+    ESP_LOGI(TAG, "Init OK (acc=%.0f LSB/g, gyro=%.1f LSB/dps)",
+             dev-&gt;acc_scale, dev-&gt;gyro_scale);
+    return ESP_OK;
+}
+
+esp_err_t icm20602_read_raw(icm20602_t *dev, icm20602_raw_data_t *raw)
+{
+    if (!dev || !dev-&gt;initialized || !raw)
+        return ESP_ERR_INVALID_ARG;
+
+    uint8_t buf[14] = {0};
+    esp_err_t ret = read_regs(dev, REG_ACCEL_XOUT_H, buf, 14);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "read raw failed");
+        return ret;
+    }
+
+    raw-&gt;acc_x = make_int16(buf[0], buf[1]);
+    raw-&gt;acc_y = make_int16(buf[2], buf[3]);
+    raw-&gt;acc_z = make_int16(buf[4], buf[5]);
+    raw-&gt;temp = make_int16(buf[6], buf[7]);
+    raw-&gt;gyro_x = make_int16(buf[8], buf[9]);
+    raw-&gt;gyro_y = make_int16(buf[10], buf[11]);
+    raw-&gt;gyro_z = make_int16(buf[12], buf[13]);
+
+    return ESP_OK;
+}
+
+esp_err_t icm20602_read_data(icm20602_t *dev, icm20602_data_t *data)
+{
+    icm20602_raw_data_t raw;
+    esp_err_t ret = icm20602_read_raw(dev, &amp;raw);
+    if (ret != ESP_OK)
+        return ret;
+
+    data-&gt;acc_x_g = raw.acc_x / dev-&gt;acc_scale;
+    data-&gt;acc_y_g = raw.acc_y / dev-&gt;acc_scale;
+    data-&gt;acc_z_g = raw.acc_z / dev-&gt;acc_scale;
+    data-&gt;gyro_x_dps = raw.gyro_x / dev-&gt;gyro_scale;
+    data-&gt;gyro_y_dps = raw.gyro_y / dev-&gt;gyro_scale;
+    data-&gt;gyro_z_dps = raw.gyro_z / dev-&gt;gyro_scale;
+    data-&gt;temp_c = raw.temp / 326.8f + 25.0f;
+
+    return ESP_OK;
+}</code></pre>
+<h4 id='实验现象-2'>实验现象</h4>
+<ul><li>静止平放时 Z 轴加速度约为 1g（9.8 m/s²），三轴角速度接近 0。</li><li>晃动板子时角速度数值显著变化。</li><li>倾斜板子时重力在各轴上的分量随之改变。</li></ul>
+<h4 id='思考题-2'>思考题</h4>
+<ol><li>为什么数据寄存器需要按高字节在前的顺序拼接？</li></ol>
+<ol><li>静止时 Z 轴加速度约为 1g 说明了什么？</li></ol>
+<ol><li>测量前为什么要执行零偏校准？</li></ol>
+<hr/>
+<h3 id='实验三-pmw3901-光流传感器-spi-采集实验'>实验三　PMW3901 光流传感器 SPI 采集实验</h3>
+<h4 id='实验目的-3'>实验目的</h4>
+<ul><li>掌握 SPI 总线的初始化与设备挂载流程。</li><li>完成光流传感器运动增量（dx / dy）的读取。</li><li>建立光流测位移与惯性测角度的配合关系。</li></ul>
+<h4 id='实验原理-3'>实验原理</h4>
+<p>PMW3901 通过拍摄地面纹理并比较相邻帧的位移计算运动增量。SPI 通信需正确配置时钟极性与相位（模式 0）。读取寄存器时需将地址最高位置 1 表示读操作。传感器输出的 dx/dy 为相对位移增量，需结合高度信息才能换算为实际地面位移。</p>
+<h4 id='硬件说明-2'>硬件说明</h4>
+<div class='tw'><table><thead><tr><th>器件</th><th>引脚</th><th>说明</th></tr></thead><tbody><tr><td>板载 PMW3901</td><td>SCLK = GPIO7，MOSI = GPIO15，MISO = GPIO16，NCS = GPIO6</td><td>SPI 四线，已在板内连接</td></tr></tbody></table></div>
+<h4 id='参考代码-3'>参考代码</h4>
+<blockquote><p><strong>工程配置</strong>：<code>main/CMakeLists.txt</code> 的 <code>REQUIRES</code> 需声明 <code>driver PMW3901</code>。</p></blockquote>
+<p><strong><code>main/main.c</code></strong></p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+#include "esp_log.h"
+#include "esp_err.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/spi_master.h"
+#include "driver/i2c_master.h"
+#include "driver/gpio.h"
+#include "driver/uart.h"
+#include "esp_timer.h"
+#include "PMW3901.h"
+
+static const char *TAG = "MAIN";
+
+// 硬件引脚
+#define SPI_SCLK_GPIO 7
+#define SPI_MOSI_GPIO 15
+#define SPI_MISO_GPIO 16
+#define PMW3901_CS_GPIO 6
+
+void app_main(void)
+{
+    esp_err_t ret;
+    spi_bus_config_t spi_bus_cfg = {
+        .mosi_io_num = SPI_MOSI_GPIO,
+        .miso_io_num = SPI_MISO_GPIO,
+        .sclk_io_num = SPI_SCLK_GPIO,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+        .max_transfer_sz = 32,
+    };
+    ret = spi_bus_initialize(SPI2_HOST, &amp;spi_bus_cfg, SPI_DMA_DISABLED);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to initialize SPI bus: %s", esp_err_to_name(ret));
+    }
+    ESP_LOGI(TAG, "SPI bus OK (SCK=%d, MOSI=%d, MISO=%d)",
+             SPI_SCLK_GPIO, SPI_MOSI_GPIO, SPI_MISO_GPIO);
+
+    spi_device_interface_config_t pmw3901_dev_cfg = {
+        .mode = 3,
+        .clock_speed_hz = 2 * 1000 * 1000,
+        .spics_io_num = PMW3901_CS_GPIO,
+        .queue_size = 1,
+        .cs_ena_pretrans = 200,
+        .cs_ena_posttrans = 200,
+    };
+    spi_device_handle_t pmw3901_spi_dev = NULL;
+    ret = spi_bus_add_device(SPI2_HOST, &amp;pmw3901_dev_cfg, &amp;pmw3901_spi_dev);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to add SPI device: %s", esp_err_to_name(ret));
+    }
+    ESP_LOGI(TAG, "PMW3901 SPI device OK (CS=%d)", PMW3901_CS_GPIO);
+    ret = pmw3901_init(pmw3901_spi_dev);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to initialize PMW3901: %s", esp_err_to_name(ret));
+    }
+    ESP_LOGI(TAG, "PMW3901 OK");
+    bool pmw_ok = (ret == ESP_OK);
+    int16_t dx = 0, dy = 0;
+    uint8_t squal = 0;
+    while (1)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        if (pmw_ok)
+        {
+            pmw3901_read_motion(&amp;dx, &amp;dy);
+            ESP_LOGI(TAG, "dx = %d, dy = %d\n", dx, dy);
+            pmw3901_read_squal(&amp;squal);
+            ESP_LOGI(TAG, "squal = %d\n", squal);
+        }
+    }
+}</code></pre>
+<p><strong><code>components/PMW3901/PMW3901.h</code></strong></p>
+<pre><code>// 用法:
+//   spi_device_handle_t spi_dev;
+//   spi_bus_add_device(SPI2_HOST, &amp;dev_cfg, &amp;spi_dev);  // 用户在 main.c 配置引脚
+//   pmw3901_init(spi_dev);
+
+#pragma once
+
+#include &lt;stdbool.h&gt;
+#include &lt;stdint.h&gt;
+#include "driver/spi_master.h"
+#include "esp_err.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @brief 初始化 PMW3901 光流传感器
+ * @param spi_dev  SPI 设备句柄 (用户预先创建, CS/模式/速率由用户配置)
+ * @return ESP_OK 成功
+ */
+esp_err_t pmw3901_init(spi_device_handle_t spi_dev);
+
+/**
+ * @brief 读取运动增量 (自动清除内部计数器)
+ *
+ * @param dx  X 方向位移
+ * @param dy  Y 方向位移
+ * @return ESP_OK 成功
+ */
+esp_err_t pmw3901_read_motion(int16_t *dx, int16_t *dy);
+
+/**
+ * @brief 读取图像质量 SQUAL (表面质量, 0~255, 越大说明表面纹理越丰富、成像越好)
+ *
+ * @param squal 输出图像质量值
+ * @return ESP_OK 成功
+ */
+esp_err_t pmw3901_read_squal(uint8_t *squal);
+
+/**
+ * @brief 开启/关闭 LED 照明
+ */
+esp_err_t pmw3901_set_led(bool led_on);
+
+/**
+ * @brief 使能帧缓冲区捕获模式
+ */
+esp_err_t pmw3901_enable_frame_buffer(void);
+
+/**
+ * @brief 读取一帧图像 (35x35 = 1225 像素灰度)
+ *
+ * 调用前需要先 pmw3901_enable_frame_buffer()
+ *
+ * @param buffer 至少 1225 字节
+ * @return ESP_OK 成功
+ */
+esp_err_t pmw3901_read_frame_buffer(uint8_t *buffer);
+
+#ifdef __cplusplus
+}
+#endif</code></pre>
+<p><strong><code>components/PMW3901/PMW3901.c</code></strong></p>
+<pre><code>#include "PMW3901.h"
+#include &lt;string.h&gt;
+#include "esp_log.h"
+#include "esp_timer.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "rom/ets_sys.h"
+
+static const char *TAG = "PMW3901";
+
+#define FRAME_TIMEOUT_US 100000 // 帧捕获等待超时 100ms
+
+// 全局状态
+static spi_device_handle_t g_spi_dev = NULL;
+static bool g_initialized = false;
+
+// SPI 底层读写
+static esp_err_t register_write(uint8_t reg, uint8_t value)
+{
+    uint8_t tx[2] = {reg | 0x80u, value};
+    spi_transaction_t trans = {
+        .length = 16,
+        .tx_buffer = tx,
+    };
+    esp_err_t ret = spi_device_transmit(g_spi_dev, &amp;trans);
+    ets_delay_us(200); // 寄存器间最小间隔
+    return ret;
+}
+
+static uint8_t register_read(uint8_t reg)
+{
+    uint8_t tx[2] = {reg &amp; ~0x80u, 0x00};
+    uint8_t rx[2] = {0};
+    spi_transaction_t trans = {
+        .length = 16,
+        .rxlength = 16,
+        .tx_buffer = tx,
+        .rx_buffer = rx,
+    };
+    spi_device_transmit(g_spi_dev, &amp;trans);
+    ets_delay_us(200);
+    return rx[1];
+}
+
+// 性能优化寄存器初始化
+static void init_registers(void)
+{
+    register_write(0x7F, 0x00);
+    register_write(0x61, 0xAD);
+    register_write(0x7F, 0x03);
+    register_write(0x40, 0x00);
+    register_write(0x7F, 0x05);
+    register_write(0x41, 0xB3);
+    register_write(0x43, 0xF1);
+    register_write(0x45, 0x14);
+    register_write(0x5B, 0x32);
+    register_write(0x5F, 0x34);
+    register_write(0x7B, 0x08);
+    register_write(0x7F, 0x06);
+    register_write(0x44, 0x1B);
+    register_write(0x40, 0xBF);
+    register_write(0x4E, 0x3F);
+    register_write(0x7F, 0x08);
+    register_write(0x65, 0x20);
+    register_write(0x6A, 0x18);
+    register_write(0x7F, 0x09);
+    register_write(0x4F, 0xAF);
+    register_write(0x5F, 0x40);
+    register_write(0x48, 0x80);
+    register_write(0x49, 0x80);
+    register_write(0x57, 0x77);
+    register_write(0x60, 0x78);
+    register_write(0x61, 0x78);
+    register_write(0x62, 0x08);
+    register_write(0x63, 0x50);
+    register_write(0x7F, 0x0A);
+    register_write(0x45, 0x60);
+    register_write(0x7F, 0x00);
+    register_write(0x4D, 0x11);
+    register_write(0x55, 0x80);
+    register_write(0x74, 0x1F);
+    register_write(0x75, 0x1F);
+    register_write(0x4A, 0x78);
+    register_write(0x4B, 0x78);
+    register_write(0x44, 0x08);
+    register_write(0x45, 0x50);
+    register_write(0x64, 0xFF);
+    register_write(0x65, 0x1F);
+    register_write(0x7F, 0x14);
+    register_write(0x65, 0x60);
+    register_write(0x66, 0x08);
+    register_write(0x63, 0x78);
+    register_write(0x7F, 0x15);
+    register_write(0x48, 0x58);
+    register_write(0x7F, 0x07);
+    register_write(0x41, 0x0D);
+    register_write(0x43, 0x14);
+    register_write(0x4B, 0x0E);
+    register_write(0x45, 0x0F);
+    register_write(0x44, 0x42);
+    register_write(0x4C, 0x80);
+    register_write(0x7F, 0x10);
+    register_write(0x5B, 0x02);
+    register_write(0x7F, 0x07);
+    register_write(0x40, 0x41);
+    register_write(0x70, 0x00);
+
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    register_write(0x32, 0x44);
+    register_write(0x7F, 0x07);
+    register_write(0x40, 0x40);
+    register_write(0x7F, 0x06);
+    register_write(0x62, 0xF0);
+    register_write(0x63, 0x00);
+    register_write(0x7F, 0x0D);
+    register_write(0x48, 0xC0);
+    register_write(0x6F, 0xD5);
+    register_write(0x7F, 0x00);
+    register_write(0x5B, 0xA0);
+    register_write(0x4E, 0xA8);
+    register_write(0x5A, 0x50);
+    register_write(0x40, 0x80);
+}
+
+// 公开 API
+esp_err_t pmw3901_init(spi_device_handle_t spi_dev)
+{
+    if (g_initialized)
+        return ESP_OK;
+    if (!spi_dev)
+        return ESP_ERR_INVALID_ARG;
+
+    g_spi_dev = spi_dev;
+
+    //  SPI 总线复位时序 (原库: CS toggle)
+    {
+        uint8_t dummy = 0;
+        spi_transaction_t trans = {
+            .length = 8,
+            .tx_buffer = &amp;dummy,
+        };
+        spi_device_transmit(g_spi_dev, &amp;trans);
+        vTaskDelay(pdMS_TO_TICKS(2));
+    }
+
+    //  上电复位
+    esp_err_t ret = register_write(0x3A, 0x5A);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Power-on reset write failed");
+        g_spi_dev = NULL;
+        return ret;
+    }
+    vTaskDelay(pdMS_TO_TICKS(5));
+
+    //  芯片 ID 检查
+    uint8_t chip_id = register_read(0x00);
+    uint8_t inv_id = register_read(0x5F);
+
+    ESP_LOGI(TAG, "Chip ID: 0x%02X (expect 0x49), Inverse: 0x%02X (~0x49=0xB6)",
+             chip_id, inv_id);
+
+    if (chip_id != 0x49 &amp;&amp; inv_id != 0xB8)
+    {
+        ESP_LOGE(TAG, "Chip ID mismatch! Check wiring.");
+        g_spi_dev = NULL;
+        return ESP_ERR_NOT_FOUND;
+    }
+
+    //  预读 Motion 寄存器 (清空残留数据)
+    register_read(0x02);
+    register_read(0x03);
+    register_read(0x04);
+    register_read(0x05);
+    register_read(0x06);
+    vTaskDelay(pdMS_TO_TICKS(1));
+
+    //  性能优化寄存器
+    init_registers();
+
+    g_initialized = true;
+    ESP_LOGI(TAG, "PMW3901 init OK");
+    return ESP_OK;
+}
+
+esp_err_t pmw3901_read_motion(int16_t *dx, int16_t *dy)
+{
+    if (!g_initialized || !dx || !dy)
+        return ESP_ERR_INVALID_STATE;
+
+    // 读 0x02 触发 motion 寄存器锁存 + 清零
+    register_read(0x02);
+
+    // 读 Delta_X (0x03 low, 0x04 high)
+    uint8_t xh = register_read(0x04);
+    uint8_t xl = register_read(0x03);
+    *dx = (int16_t)(((uint16_t)xh &lt;&lt; 8) | xl);
+
+    // 读 Delta_Y (0x05 low, 0x06 high)
+    uint8_t yh = register_read(0x06);
+    uint8_t yl = register_read(0x05);
+    *dy = (int16_t)(((uint16_t)yh &lt;&lt; 8) | yl);
+
+    return ESP_OK;
+}
+
+esp_err_t pmw3901_read_squal(uint8_t *squal)
+{
+    if (!g_initialized || !squal)
+        return ESP_ERR_INVALID_STATE;
+
+    // 0x55 = Surface_Quality (SQUAL), 图像质量 0~255
+    *squal = register_read(0x07);
+    return ESP_OK;
+}
+
+esp_err_t pmw3901_set_led(bool led_on)
+{
+    if (!g_initialized)
+        return ESP_ERR_INVALID_STATE;
+
+    vTaskDelay(pdMS_TO_TICKS(200));
+    register_write(0x7F, 0x14);
+    register_write(0x6F, led_on ? 0x1C : 0x00);
+    register_write(0x7F, 0x00);
+
+    return ESP_OK;
+}
+
+esp_err_t pmw3901_enable_frame_buffer(void)
+{
+    if (!g_initialized)
+        return ESP_ERR_INVALID_STATE;
+
+    register_write(0x7F, 0x07);
+    register_write(0x41, 0x1D);
+    register_write(0x4C, 0x00);
+    register_write(0x7F, 0x08);
+    register_write(0x6A, 0x38);
+    register_write(0x7F, 0x00);
+    register_write(0x55, 0x04);
+    register_write(0x40, 0x80);
+    register_write(0x4D, 0x11);
+    register_write(0x70, 0x00);
+    register_write(0x58, 0xFF);
+
+    // 等待帧捕获就绪
+    int check;
+    do
+    {
+        check = register_read(0x58) &gt;&gt; 6;
+    } while (check == 0x03);
+
+    ets_delay_us(50);
+    return ESP_OK;
+}
+
+esp_err_t pmw3901_read_frame_buffer(uint8_t *buffer)
+{
+    if (!g_initialized || !buffer)
+        return ESP_ERR_INVALID_STATE;
+
+    int count = 0;
+    uint8_t mask = 0x0C;
+
+    for (int i = 0; i &lt; 1225; i++)
+    {
+        uint8_t a, hold;
+        // 等待有效数据
+        do
+        {
+            a = register_read(0x58);
+            hold = a &gt;&gt; 6;
+        } while (hold == 0x00 || hold == 0x03);
+
+        if (hold == 0x01)
+        {
+            uint8_t b = register_read(0x58);
+            uint8_t pixel = (uint8_t)(a &lt;&lt; 2) | (b &amp; mask);
+            buffer[count++] = pixel;
+        }
+    }
+
+    // 恢复并等待下一次就绪
+    register_write(0x70, 0x00);
+    register_write(0x58, 0xFF);
+
+    int check;
+    do
+    {
+        check = register_read(0x58) &gt;&gt; 6;
+    } while (check == 0x03);
+
+    return ESP_OK;
+}</code></pre>
+<h4 id='实验现象-3'>实验现象</h4>
+<ul><li>模块在具有纹理的桌面上平移时，dx / dy 随移动方向与距离变化。</li><li>在纯色无纹理表面或镜头被遮挡时，数据不再更新。</li><li>移动速度越快，单位时间内的增量数值越大。</li></ul>
+<h4 id='思考题-3'>思考题</h4>
+<ol><li>为什么光流传感器要求地面有纹理？</li></ol>
+<ol><li>dx / dy 与实际位移之间还需要哪些参数才能换算？</li></ol>
+<ol><li>SPI 模式配置错误会出现什么现象？</li></ol>
+<hr/>
+<h3 id='实验四-imx219-摄像头图像采集实验'>实验四　IMX219 摄像头图像采集实验</h3>
+<h4 id='实验目的-4'>实验目的</h4>
+<ul><li>掌握并行接口摄像头的初始化流程。</li><li>理解帧缓冲的分配、获取与归还机制。</li><li>完成单帧图像采集与实时视频流输出。</li></ul>
+<h4 id='实验原理-4'>实验原理</h4>
+<p>摄像头通过 SCCB 配置寄存器，通过 DVP 并行接口输出图像数据，PCLK 提供像素时钟，HREF 标识行有效，VSYNC 标识帧起始。图像帧由 <code>esp_camera_fb_get()</code> 获取，处理完成后必须调用 <code>esp_camera_fb_return()</code> 归还，否则帧缓冲耗尽导致采集失败。</p>
+<h4 id='参考代码-4'>参考代码</h4>
+<blockquote><p>本实验的驱动为 <code>camera.c</code>；同目录下 <code>camera/</code> 是 Qt 上位机程序（<code>main.cpp</code>、<code>widget.cpp</code>、<code>widget.h</code>），<code>交叉编译命令.txt</code> 是编译说明。</p></blockquote>
+<p><strong><code>camera.c</code></strong></p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;string.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;sys/ioctl.h&gt;
+#include &lt;sys/mman.h&gt;
+#include &lt;linux/videodev2.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;signal.h&gt;
+#include &lt;poll.h&gt;
+
+// ����
+#define VIDEO_DEV       "/dev/video0"
+#define TARGET_IP       "192.168.1.250"
+#define TARGET_PORT     9000
+#define WIDTH           640
+#define HEIGHT          480
+#define PIXFORMAT       V4L2_PIX_FMT_MJPEG
+
+#define FRAME_HEADER    0xAA55
+typedef struct {
+    uint16_t header;
+    uint32_t length;
+} FrameProto;
+
+static int fd_video = -1;
+static int udp_sock = -1;
+static struct sockaddr_in target_addr;
+static void *buffer_start = NULL;
+static unsigned int buffer_length = 0;
+static volatile int g_exit = 0;
+
+static void sigint_handler(int sig)
+{
+    (void)sig;
+    g_exit = 1;
+    printf("\nReceive SIGINT, prepare exit...\n");
+}
+
+static int udp_init(const char *ip, uint16_t port)
+{
+    udp_sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (udp_sock &lt; 0) {
+        perror("socket");
+        return -1;
+    }
+    memset(&amp;target_addr, 0, sizeof(target_addr));
+    target_addr.sin_family = AF_INET;
+    target_addr.sin_port = htons(port);
+    if (inet_pton(AF_INET, ip, &amp;target_addr.sin_addr) &lt;= 0) {
+        perror("inet_pton");
+        close(udp_sock);
+        udp_sock = -1;
+        return -1;
+    }
+    return 0;
+}
+
+static int v4l2_init(const char *dev)
+{
+    fd_video = open(dev, O_RDWR);
+    if (fd_video &lt; 0) {
+        perror("open video");
+        return -1;
+    }
+
+    struct v4l2_format fmt = {0};
+    fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    fmt.fmt.pix.width = WIDTH;
+    fmt.fmt.pix.height = HEIGHT;
+    fmt.fmt.pix.pixelformat = PIXFORMAT;
+    fmt.fmt.pix.field = V4L2_FIELD_NONE;
+    if (ioctl(fd_video, VIDIOC_S_FMT, &amp;fmt) &lt; 0) {
+        perror("VIDIOC_S_FMT");
+        close(fd_video);
+        fd_video = -1;
+        return -1;
+    }
+
+    struct v4l2_requestbuffers req = {0};
+    req.count = 1;
+    req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    req.memory = V4L2_MEMORY_MMAP;
+    if (ioctl(fd_video, VIDIOC_REQBUFS, &amp;req) &lt; 0) {
+        perror("REQBUFS");
+        close(fd_video);
+        fd_video = -1;
+        return -1;
+    }
+
+    struct v4l2_buffer buf = {0};
+    buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    buf.memory = V4L2_MEMORY_MMAP;
+    buf.index = 0;
+    if (ioctl(fd_video, VIDIOC_QUERYBUF, &amp;buf) &lt; 0) {
+        perror("QUERYBUF");
+        close(fd_video);
+        fd_video = -1;
+        return -1;
+    }
+    buffer_length = buf.length;
+    buffer_start = mmap(NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd_video, buf.m.offset);
+    if (buffer_start == MAP_FAILED) {
+        perror("mmap");
+        close(fd_video);
+        fd_video = -1;
+        return -1;
+    }
+
+    if (ioctl(fd_video, VIDIOC_QBUF, &amp;buf) &lt; 0) {
+        perror("QBUF");
+        munmap(buffer_start, buffer_length);
+        buffer_start = NULL;
+        close(fd_video);
+        fd_video = -1;
+        return -1;
+    }
+
+    enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    if (ioctl(fd_video, VIDIOC_STREAMON, &amp;type) &lt; 0) {
+        perror("STREAMON");
+        munmap(buffer_start, buffer_length);
+        buffer_start = NULL;
+        close(fd_video);
+        fd_video = -1;
+        return -1;
+    }
+    printf("Camera start %dx%d MJPEG\n", WIDTH, HEIGHT);
+    return 0;
+}
+
+static int capture_and_send(void)
+{
+    struct pollfd pfd = {
+        .fd = fd_video,
+        .events = POLLIN
+    };
+    // poll��ʱ200ms�����ڼ��g_exit
+    int ret = poll(&amp;pfd, 1, 200);
+    if (ret &lt; 0) {
+        if (errno == EINTR)
+            return 0;
+        perror("poll");
+        return -1;
+    }
+    if (ret == 0) {
+        // ��ʱ����֡����
+        return 0;
+    }
+
+    struct v4l2_buffer buf = {0};
+    buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    buf.memory = V4L2_MEMORY_MMAP;
+    if (ioctl(fd_video, VIDIOC_DQBUF, &amp;buf) &lt; 0) {
+        perror("DQBUF");
+        return -1;
+    }
+
+    FrameProto proto;
+    proto.header = FRAME_HEADER;
+    proto.length = buf.bytesused;
+
+    struct iovec iov[2];
+    iov[0].iov_base = &amp;proto;
+    iov[0].iov_len  = sizeof(proto);
+    iov[1].iov_base = buffer_start;
+    iov[1].iov_len  = buf.bytesused;
+
+    struct msghdr msg = {
+        .msg_name = &amp;target_addr,
+        .msg_namelen = sizeof(target_addr),
+        .msg_iov = iov,
+        .msg_iovlen = 2
+    };
+
+    sendmsg(udp_sock, &amp;msg, 0);
+    printf("Send frame len: %u\n", buf.bytesused);
+
+    if (ioctl(fd_video, VIDIOC_QBUF, &amp;buf) &lt; 0) {
+        perror("QBUF");
+        return -1;
+    }
+    return 0;
+}
+
+static void clean_up(void)
+{
+    if (fd_video &gt;= 0) {
+        enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        ioctl(fd_video, VIDIOC_STREAMOFF, &amp;type);
+    }
+    if (buffer_start != NULL) {
+        munmap(buffer_start, buffer_length);
+        buffer_start = NULL;
+    }
+    if (fd_video &gt;= 0) {
+        close(fd_video);
+        fd_video = -1;
+    }
+    if (udp_sock &gt;= 0) {
+        close(udp_sock);
+        udp_sock = -1;
+    }
+    printf("Cleanup done, camera device released\n");
+}
+
+int main(void)
+{
+    signal(SIGINT, sigint_handler);
+
+    if (udp_init(TARGET_IP, TARGET_PORT) &lt; 0)
+        return -1;
+    if (v4l2_init(VIDEO_DEV) &lt; 0) {
+        clean_up();
+        return -1;
+    }
+
+    printf("Streaming to %s:%d\n", TARGET_IP, TARGET_PORT);
+    while (!g_exit) {
+        capture_and_send();
+        usleep(50000);
+    }
+
+    clean_up();
+    return 0;
+}</code></pre>
+<h4 id='实验现象-4'>实验现象</h4>
+<ul><li>串口每秒打印一次图像帧长度。</li><li>更换分辨率或调整 JPEG 质量后帧长度随之变化。</li><li>未归还帧缓冲时，若干帧后采集开始失败。</li></ul>
+<blockquote><p><strong>引脚复用提示</strong>：<code>camera_config_t</code> 中的 <code>.ledc_timer</code> 与 <code>.ledc_channel</code> 表示 XCLK 引脚（GPIO15）的时钟由 <strong>LEDC 外设</strong>产生，该引脚已被外设占用。若后续要把 GPIO15 当普通 GPIO 使用，必须先调用 <code>gpio_reset_pin(GPIO_NUM_15)</code>。</p></blockquote>
+<h4 id='思考题-4'>思考题</h4>
+<ol><li>帧缓冲为什么必须成对使用（获取 / 归还）？</li></ol>
+<ol><li>分辨率提高后帧长度与内存占用如何变化？</li></ol>
+<ol><li>图像数据为什么要存放在 PSRAM 中？</li></ol>
+<hr/>
+<h3 id='实验五-spl06-001-气压计-spi-采集实验'>实验五　SPL06-001 气压计 SPI 采集实验</h3>
+<h4 id='实验目的-5'>实验目的</h4>
+<ul><li>掌握 SPI 传感器寄存器的读写时序。</li><li>理解气压与海拔的换算关系。</li><li>完成气压与温度数据的采集与高度估算。</li></ul>
+<h4 id='实验原理-5'>实验原理</h4>
+<p>SPL06-001 输出气压与温度原始值，需结合出厂标定系数进行温度补偿，再换算出真实气压值。气压随高度升高而降低，国际标准大气模型下可用下式估算相对高度：</p>
+<pre><code>高度差(m) ≈ 44330 × [1 − (P / P0) ^ 0.1903]</code></pre>
+<p>其中 P 为当前气压，P0 为基准气压。该公式为近似模型，实际应用中需以起飞点的气压作为基准值。</p>
+<h4 id='硬件说明-3'>硬件说明</h4>
+<div class='tw'><table><thead><tr><th>器件</th><th>引脚</th><th>说明</th></tr></thead><tbody><tr><td>板载 SPL06-001</td><td>SCK = GPIO7，SDA(MOSI) = GPIO15，SDO(MISO) = GPIO16，CSB = GPIO8</td><td>SPI 四线</td></tr></tbody></table></div>
+<h4 id='参考代码-5'>参考代码</h4>
+<blockquote><p><strong>工程配置</strong>：<code>main/CMakeLists.txt</code> 的 <code>REQUIRES</code> 需声明 <code>driver spl06001</code>。</p></blockquote>
+<p><strong><code>main/main.c</code></strong></p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+#include "esp_log.h"
+#include "esp_err.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/spi_master.h"
+#include "driver/i2c_master.h"
+#include "driver/gpio.h"
+#include "driver/uart.h"
+#include "spl06001.h"
+
+static const char *TAG = "MAIN";
+
+// 硬件引脚
+#define SPI_SCLK_GPIO 7
+#define SPI_MOSI_GPIO 15
+#define SPI_MISO_GPIO 16
+#define SPL_CS_GPIO 8
+
+void app_main(void)
+{
+    esp_err_t ret;
+    spi_bus_config_t spi_bus_cfg = {
+        .mosi_io_num = SPI_MOSI_GPIO,
+        .miso_io_num = SPI_MISO_GPIO,
+        .sclk_io_num = SPI_SCLK_GPIO,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+        .max_transfer_sz = 32,
+    };
+    ret = spi_bus_initialize(SPI2_HOST, &amp;spi_bus_cfg, SPI_DMA_DISABLED);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to initialize SPI bus: %s", esp_err_to_name(ret));
+    }
+    ESP_LOGI(TAG, "SPI bus OK (SCK=%d, MOSI=%d, MISO=%d)",
+             SPI_SCLK_GPIO, SPI_MOSI_GPIO, SPI_MISO_GPIO);
+
+    spi_device_interface_config_t spl06001_dev_cfg = {
+        .mode = 3,
+        .clock_speed_hz = 1 * 1000 * 1000,
+        .spics_io_num = SPL_CS_GPIO,
+        .queue_size = 1,
+    };
+    spi_device_handle_t spl06001_spi_dev = NULL;
+    ret = spi_bus_add_device(SPI2_HOST, &amp;spl06001_dev_cfg, &amp;spl06001_spi_dev);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to add SPI device: %s", esp_err_to_name(ret));
+    }
+    ESP_LOGI(TAG, "spl06001 SPI device OK (CS=%d)", SPL_CS_GPIO);
+    ret = spl06_init(spl06001_spi_dev);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to initialize spl06: %s", esp_err_to_name(ret));
+    }
+    ESP_LOGI(TAG, "spl06001 OK");
+    bool spl_ok = (ret == ESP_OK);
+    spl06_data_t data;
+    while (1)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        if (spl_ok)
+        {
+            spl06_read(&amp;data);
+            ESP_LOGI(TAG, "temperature_c = %.2f, pressure_pa = %.2f, pressure_hpa = %.2f, altitude_m = %.2f\n", data.temperature_c, data.pressure_pa, data.pressure_hpa, data.altitude_m);
+            float altitude_m = spl06_pressure_to_altitude(data.pressure_pa);
+            ESP_LOGI(TAG, "altitude_m = %.2f\n", altitude_m);
+        }
+    }
+}</code></pre>
+<p><strong><code>components/spl06001/spl06001.h</code></strong></p>
+<pre><code>#ifndef SPL06001_H
+#define SPL06001_H
+
+#include &lt;stdint.h&gt;
+#include "driver/spi_master.h"
+#include "esp_err.h"
+
+typedef struct // spl06_data_t是SPL专用数据存储载体
+{
+    int32_t raw_temperature; // 传感器读取到的的原始温度ADC采样值
+    int32_t raw_pressure;    // 存储传感器输出的原始气压ADC裸数据
+
+    float temperature_c; // 精确过后得到  单位：摄氏度℃
+    float pressure_pa;   // 原始气压换算为标准帕斯卡（Pa）
+    float pressure_hpa;  // 气压换算成百帕hPa
+    float altitude_m;    // 海拔
+} spl06_data_t;          // spl06_data_t(结构体名称)是SPL专用数据存储载体里面有原始的，经过计算的温度，气压的数据
+
+/**
+ * @brief 初始化 SPL06 气压计
+ * @param spi_dev  SPI 设备句柄 (用户预先创建, CS/模式/速率由用户配置)
+ */
+esp_err_t spl06_init(spi_device_handle_t spi_dev);
+esp_err_t spl06_read(spl06_data_t *data);
+
+float spl06_pressure_to_altitude(float pressure_pa); // 传入参数，由当前的气压参数算出海拔
+
+#endif</code></pre>
+<p><strong><code>components/spl06001/spl06001.c</code></strong></p>
+<pre><code>// SPL06 气压计 — SPI 驱动
+
+#include "spl06001.h"
+
+#include &lt;string.h&gt;
+#include &lt;math.h&gt;
+
+#include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/spi_master.h"
+
+static const char *TAG = "SPL06";
+
+#define SPL06_REG_PRS_B2 0x00
+#define SPL06_REG_TMP_B2 0x03
+#define SPL06_REG_PRS_CFG 0x06
+#define SPL06_REG_TMP_CFG 0x07
+#define SPL06_REG_MEAS_CFG 0x08
+#define SPL06_REG_CFG_REG 0x09
+#define SPL06_REG_RESET 0x0C
+#define SPL06_REG_ID 0x0D
+#define SPL06_REG_COEF 0x10
+
+#define SPL06_ID_EXPECTED 0x10
+#define SPL06_PRS_CFG_VALUE   0x03
+#define SPL06_TMP_CFG_VALUE   0x83
+#define SPL06_MEAS_CFG_VALUE  0x07
+
+#define SPL06_SCALE_FACTOR_8X 7864320.0f
+
+static spi_device_handle_t spl06_spi = NULL;
+
+typedef struct {
+    int16_t c0;
+    int16_t c1;
+    int32_t c00;
+    int32_t c10;
+    int16_t c01;
+    int16_t c11;
+    int16_t c20;
+    int16_t c21;
+    int16_t c30;
+} spl06_coef_t;
+
+static spl06_coef_t g_coef;
+
+static esp_err_t spl06_write_reg(uint8_t reg, uint8_t value)
+{
+    uint8_t tx_data[2] = { reg &amp; 0x7F, value };
+    spi_transaction_t trans = {
+        .length    = 8 * sizeof(tx_data),
+        .tx_buffer = tx_data,
+    };
+    return spi_device_transmit(spl06_spi, &amp;trans);
+}
+
+static esp_err_t spl06_read_regs(uint8_t reg, uint8_t *data, uint8_t len)
+{
+    if (len == 0 || len &gt; 32) return ESP_ERR_INVALID_ARG;
+
+    uint8_t tx_data[33] = {0};
+    uint8_t rx_data[33] = {0};
+    tx_data[0] = reg | 0x80;
+
+    spi_transaction_t trans = {
+        .length    = 8 * (len + 1),
+        .tx_buffer = tx_data,
+        .rx_buffer = rx_data,
+    };
+
+    esp_err_t ret = spi_device_transmit(spl06_spi, &amp;trans);
+    if (ret != ESP_OK) return ret;
+
+    memcpy(data, &amp;rx_data[1], len);
+    return ESP_OK;
+}
+
+static esp_err_t spl06_read_reg(uint8_t reg, uint8_t *value)
+{
+    return spl06_read_regs(reg, value, 1);
+}
+
+static int32_t sign_extend(uint32_t raw, uint8_t bits)
+{
+    uint32_t sign_bit = 1U &lt;&lt; (bits - 1);
+    if (raw &amp; sign_bit) raw |= ~((1U &lt;&lt; bits) - 1);
+    return (int32_t)raw;
+}
+
+static esp_err_t spl06_read_raw24(uint8_t start_reg, int32_t *raw)
+{
+    uint8_t buf[3] = {0};
+    esp_err_t ret = spl06_read_regs(start_reg, buf, 3);
+    if (ret != ESP_OK) return ret;
+
+    uint32_t value = ((uint32_t)buf[0] &lt;&lt; 16) | ((uint32_t)buf[1] &lt;&lt; 8) | buf[2];
+    *raw = sign_extend(value, 24);
+    return ESP_OK;
+}
+
+static esp_err_t spl06_read_calibration_data(void)
+{
+    uint8_t coef[18] = {0};
+    esp_err_t ret = spl06_read_regs(SPL06_REG_COEF, coef, 18);
+    if (ret != ESP_OK) return ret;
+
+    g_coef.c0  = sign_extend(((uint32_t)coef[0] &lt;&lt; 4) | ((uint32_t)coef[1] &gt;&gt; 4), 12);
+    g_coef.c1  = sign_extend((((uint32_t)coef[1] &amp; 0x0F) &lt;&lt; 8) | coef[2], 12);
+    g_coef.c00 = sign_extend(((uint32_t)coef[3] &lt;&lt; 12) | ((uint32_t)coef[4] &lt;&lt; 4) | ((uint32_t)coef[5] &gt;&gt; 4), 20);
+    g_coef.c10 = sign_extend((((uint32_t)coef[5] &amp; 0x0F) &lt;&lt; 16) | ((uint32_t)coef[6] &lt;&lt; 8) | coef[7], 20);
+    g_coef.c01 = sign_extend(((uint32_t)coef[8] &lt;&lt; 8) | coef[9], 16);
+    g_coef.c11 = sign_extend(((uint32_t)coef[10] &lt;&lt; 8) | coef[11], 16);
+    g_coef.c20 = sign_extend(((uint32_t)coef[12] &lt;&lt; 8) | coef[13], 16);
+    g_coef.c21 = sign_extend(((uint32_t)coef[14] &lt;&lt; 8) | coef[15], 16);
+    g_coef.c30 = sign_extend(((uint32_t)coef[16] &lt;&lt; 8) | coef[17], 16);
+
+    ESP_LOGI(TAG, "Calibration data loaded");
+    ESP_LOGI(TAG, "c0=%d, c1=%d, c00=%ld, c10=%ld",
+             g_coef.c0, g_coef.c1, g_coef.c00, g_coef.c10);
+    return ESP_OK;
+}
+
+static esp_err_t spl06_wait_ready(void)
+{
+    for (int i = 0; i &lt; 50; i++) {
+        uint8_t status = 0;
+        esp_err_t ret = spl06_read_reg(SPL06_REG_MEAS_CFG, &amp;status);
+        if (ret != ESP_OK) return ret;
+
+        if ((status &amp; 0xC0) == 0xC0) {
+            ESP_LOGI(TAG, "Sensor ready, MEAS_CFG=0x%02X", status);
+            return ESP_OK;
+        }
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+    ESP_LOGE(TAG, "Sensor ready timeout");
+    return ESP_ERR_TIMEOUT;
+}
+
+static esp_err_t spl06_wait_data_ready(void)
+{
+    for (int i = 0; i &lt; 50; i++) {
+        uint8_t status = 0;
+        esp_err_t ret = spl06_read_reg(SPL06_REG_MEAS_CFG, &amp;status);
+        if (ret != ESP_OK) return ret;
+
+        if ((status &amp; 0x30) == 0x30) return ESP_OK;
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+    ESP_LOGW(TAG, "Data ready timeout");
+    return ESP_ERR_TIMEOUT;
+}
+
+esp_err_t spl06_init(spi_device_handle_t spi_dev)
+{
+    if (!spi_dev) return ESP_ERR_INVALID_ARG;
+    spl06_spi = spi_dev;
+
+    esp_err_t ret;
+
+    uint8_t id = 0;
+    ret = spl06_read_reg(SPL06_REG_ID, &amp;id);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Read ID failed: %s", esp_err_to_name(ret));
+        return ret;
+    }
+    ESP_LOGI(TAG, "SPL06 ID = 0x%02X", id);
+
+    if (id != SPL06_ID_EXPECTED) {
+        ESP_LOGW(TAG, "ID mismatch: got 0x%02X, expected 0x10. Will try to use anyway.", id);
+    }
+
+    ret = spl06_write_reg(SPL06_REG_RESET, 0x09);
+    if (ret != ESP_OK) return ret;
+    vTaskDelay(pdMS_TO_TICKS(50));
+
+    ret = spl06_wait_ready();
+    if (ret != ESP_OK) return ret;
+
+    ret = spl06_read_calibration_data();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Read calibration data failed");
+        return ret;
+    }
+
+    spl06_write_reg(SPL06_REG_PRS_CFG, SPL06_PRS_CFG_VALUE);
+    spl06_write_reg(SPL06_REG_TMP_CFG, SPL06_TMP_CFG_VALUE);
+    spl06_write_reg(SPL06_REG_CFG_REG, 0x00);
+    spl06_write_reg(SPL06_REG_MEAS_CFG, SPL06_MEAS_CFG_VALUE);
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    ESP_LOGI(TAG, "SPL06 init done");
+    return ESP_OK;
+}
+
+esp_err_t spl06_read(spl06_data_t *data)
+{
+    if (data == NULL) return ESP_ERR_INVALID_ARG;
+
+    esp_err_t ret = spl06_wait_data_ready();
+    if (ret != ESP_OK) return ret;
+
+    int32_t raw_temp = 0, raw_pressure = 0;
+    ret = spl06_read_raw24(SPL06_REG_TMP_B2, &amp;raw_temp);
+    if (ret != ESP_OK) return ret;
+    ret = spl06_read_raw24(SPL06_REG_PRS_B2, &amp;raw_pressure);
+    if (ret != ESP_OK) return ret;
+
+    float Traw_sc = raw_temp / SPL06_SCALE_FACTOR_8X;
+    float Praw_sc = raw_pressure / SPL06_SCALE_FACTOR_8X;
+
+    float temperature_c = g_coef.c0 * 0.5f + g_coef.c1 * Traw_sc;
+    float pressure_pa =
+        g_coef.c00 +
+        Praw_sc * (g_coef.c10 + Praw_sc * (g_coef.c20 + Praw_sc * g_coef.c30)) +
+        Traw_sc * g_coef.c01 +
+        Traw_sc * Praw_sc * (g_coef.c11 + Praw_sc * g_coef.c21);
+
+    data-&gt;raw_temperature = raw_temp;
+    data-&gt;raw_pressure    = raw_pressure;
+    data-&gt;temperature_c   = temperature_c;
+    data-&gt;pressure_pa     = pressure_pa;
+    data-&gt;pressure_hpa    = pressure_pa / 100.0f;
+    data-&gt;altitude_m      = spl06_pressure_to_altitude(pressure_pa);
+
+    return ESP_OK;
+}
+
+float spl06_pressure_to_altitude(float pressure_pa)
+{
+    return 44330.0f * (1.0f - powf(pressure_pa / 101325.0f, 0.19029495f));
+}</code></pre>
+<h4 id='实验现象-5'>实验现象</h4>
+<ul><li>传感器静止时高度读数在较小范围内波动。</li><li>举起传感器 1 米左右，高度读数增加约 1 米，但存在噪声。</li><li>人员走动、开关门会引起气压扰动，读数出现跳变。</li></ul>
+<h4 id='思考题-5'>思考题</h4>
+<ol><li>气压为什么可以用来测量高度？</li></ol>
+<ol><li>高度读数波动的原因有哪些？如何抑制？</li></ol>
+<ol><li>为什么实际使用时要先记录起飞点的基准气压？</li></ol>
+<hr/>
+<h3 id='实验六-vl53l0x-激光测距-i2c-采集实验'>实验六　VL53L0X 激光测距 I2C 采集实验</h3>
+<h4 id='实验目的-6'>实验目的</h4>
+<ul><li>掌握复杂 I2C 传感器的初始化与配置流程。</li><li>理解测量模式与时序预算对精度的影响。</li><li>完成单次测量与连续测量两种采集方式。</li></ul>
+<h4 id='实验原理-6'>实验原理</h4>
+<p>VL53L0X 采用 ToF（飞行时间）原理测距。初始化需要依次完成寄存器配置、参考校准与 SPAD 校准。时序预算（timing budget）决定单次测量允许的最长时间，预算越大精度与量程越好，但测量周期越长。器件支持单次测量与连续测量两种模式，也可通过中断引脚在数据就绪时触发读取。</p>
+<h4 id='硬件说明-4'>硬件说明</h4>
+<div class='tw'><table><thead><tr><th>器件</th><th>引脚</th><th>说明</th></tr></thead><tbody><tr><td>板载 VL53L0X</td><td>I2C_SCL = GPIO42，I2C_SDA = GPIO41</td><td>已在板内连接</td></tr></tbody></table></div>
+<h4 id='参考代码-6'>参考代码</h4>
+<blockquote><p>VL53L0X 的驱动在 <code>components/VL53L0X/VL53L0X.c</code>（约 900 行）与 <code>VL53L0X.h</code>，代码较长，此处只列出实验主程序，驱动文件按原工程使用即可。</p></blockquote>
+<blockquote><p><strong>工程配置</strong>：<code>main/CMakeLists.txt</code> 的 <code>REQUIRES</code> 需声明 <code>driver VL53L0X</code>。</p></blockquote>
+<p><strong><code>main/main.c</code></strong></p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+#include "esp_log.h"
+#include "esp_err.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/spi_master.h"
+#include "driver/i2c_master.h"
+#include "driver/gpio.h"
+#include "driver/uart.h"
+#include "esp_timer.h"
+#include "VL53L0X.h"
+
+static const char *TAG = "MAIN";
+
+#define I2C_SDA_GPIO 41
+#define I2C_SCL_GPIO 42
+#define I2C_FREQ_HZ 400000
+
+#define VL53L0X_ADDR 0x29
+
+void app_main(void)
+{
+    esp_err_t ret;
+    i2c_master_bus_config_t i2c_bus_cfg = {
+        .clk_source = I2C_CLK_SRC_DEFAULT,
+        .i2c_port = I2C_NUM_0,
+        .scl_io_num = I2C_SCL_GPIO,
+        .sda_io_num = I2C_SDA_GPIO,
+        .glitch_ignore_cnt = 7,
+        .flags.enable_internal_pullup = true,
+    };
+    i2c_master_bus_handle_t i2c_bus_handle = NULL;
+    ret = i2c_new_master_bus(&amp;i2c_bus_cfg, &amp;i2c_bus_handle);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "I2C bus init failed: %s", esp_err_to_name(ret));
+        return;
+    }
+    ESP_LOGI(TAG, "I2C bus OK (SDA=%d, SCL=%d)", I2C_SDA_GPIO, I2C_SCL_GPIO);
+    i2c_device_config_t VL53L0X_dev_cfg =
+        {
+            .dev_addr_length = I2C_ADDR_BIT_7,
+            .device_address = VL53L0X_ADDR,
+            .scl_speed_hz = I2C_FREQ_HZ,
+        };
+    i2c_master_dev_handle_t vl53l0x_i2c_dev = NULL;
+    ret = i2c_master_bus_add_device(i2c_bus_handle, &amp;VL53L0X_dev_cfg, &amp;vl53l0x_i2c_dev);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "I2C device add failed: %s", esp_err_to_name(ret));
+        return;
+    }
+    ESP_LOGI(TAG, "I2C device OK (SDA=%d, SCL=%d)", I2C_SDA_GPIO, I2C_SCL_GPIO);
+
+    vl53l0x_config_t tof_config;
+    vl53l0x_init_default_config(&amp;tof_config);
+    tof_config.i2c_address = VL53L0X_ADDR;
+    tof_config.timeout_ms = 500;
+    tof_config.io_2v8 = true;
+    tof_config.interrupt_pin = 1;
+
+    vl53l0x_t tof_dev;
+    ret = vl53l0x_init(&amp;tof_dev, vl53l0x_i2c_dev, &amp;tof_config);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "VL53L0X init failed: %s", esp_err_to_name(ret));
+    }
+    else
+    {
+        vl53l0x_set_range_mode(&amp;tof_dev, 2);
+        ESP_LOGI(TAG, "VL53L0X OK (long-range)");
+    }
+
+    bool tof_ok = (ret == ESP_OK);
+    uint16_t dist = 0;
+    bool dist_ok = false;
+
+    while (1)
+    {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        if (tof_ok)
+        {
+
+            dist = vl53l0x_read_range_single_mm(&amp;tof_dev);
+            dist_ok = !vl53l0x_timeout_occurred(&amp;tof_dev) &amp;&amp; dist &lt; 8000 &amp;&amp; dist &gt;= 30;
+        }
+        if (dist_ok &amp;&amp; tof_ok)
+        {
+            ESP_LOGI(TAG, "Distance: %d mm", dist);
+        }
+        else
+        {
+            ESP_LOGW(TAG, "Distance read failed");
+        }
+    }
+}</code></pre>
+<h4 id='实验现象-6'>实验现象</h4>
+<ul><li>串口输出当前测距值，单位毫米。</li><li>用挡板在传感器前移动，读数随之变化。</li><li>目标为黑色或透明材质时读数异常（偏大或返回 8190）。</li></ul>
+<h4 id='思考题-6'>思考题</h4>
+<ol><li>时序预算增大后，测量精度与速度如何变化？</li></ol>
+<ol><li>黑色或透明物体为什么难以测量？</li></ol>
+<ol><li>多个同型号传感器挂接在同一条 I2C 总线上需要解决什么问题？</li></ol>
+<hr/>
+<h3 id='实验七-上位机解析陀螺仪数据计算偏航角'>实验七　上位机解析陀螺仪数据计算偏航角</h3>
+<h4 id='实验目的-7'>实验目的</h4>
+<ul><li>掌握将传感器数据通过串口或网络上报到上位机的方法。</li><li>理解角速度积分得到角度的计算过程。</li><li>分析积分漂移产生的原因与补偿思路。</li></ul>
+<h4 id='实验原理-7'>实验原理</h4>
+<p>角速度对时间积分即得到角度：</p>
+<pre><code>偏航角(rad) = Σ (gz(rad/s) × dt)</code></pre>
+<p>由于陀螺仪存在零偏与随机噪声，长时间积分会产生累积漂移。工程上采用两种方法抑制：一是测量前进行零偏校准，将静止状态下的多次采样平均值作为零偏并从原始数据中扣除；二是与加速度计或磁力计进行互补滤波或卡尔曼滤波融合。</p>
+<h4 id='硬件说明-5'>硬件说明</h4>
+<p>板载 ICM20602 已与 ESP32-S3 内部连接（SCL = GPIO42，SDA = GPIO41），无需额外接线。</p>
+<h4 id='参考代码-7'>参考代码</h4>
+<blockquote><p>本实验是<strong>上位机（电脑端）Qt 工程</strong>，不烧录到开发板。</p></blockquote>
+<p><strong><code>ICM20602/GyroParser.h</code></strong></p>
+<pre><code>#ifndef GYROPARSER_H
+#define GYROPARSER_H
+
+#include &lt;QObject&gt;
+#include &lt;QVector&gt;
+
+class GyroParser : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit GyroParser(QObject *parent = nullptr);
+
+    void processLine(const QString &amp;line);
+
+    double roll()  const { return m_roll; }
+    double pitch() const { return m_pitch; }
+    double yaw()   const { return m_yaw; }
+
+    void setGyroBias(double gxDps, double gyDps, double gzDps);
+
+    void setTau(double seconds) { m_tau = seconds &gt; 0 ? seconds : 1.0; }
+
+    void startCalibration(int sampleCount = 50);
+    bool isCalibrating() const { return m_calibrating; }
+    void reset();
+
+signals:
+    void attitudeChanged(double rollDeg, double pitchDeg, double yawDeg);
+
+    void calibrationDone(double gxBias, double gyBias, double gzBias);
+
+private:
+    void finishCalibration();
+
+    double m_roll = 0.0;   // 横滚角（度）
+    double m_pitch = 0.0;  // 俯仰角（度）
+    double m_yaw = 0.0;    // 偏航角（度）
+
+    double m_biasX = 0.0;  // gx 零漂（dps）
+    double m_biasY = 0.0;  // gy 零漂（dps）
+    double m_biasZ = 0.0;  // gz 零漂（dps）
+
+    double m_tau = 1.0;    // 互补滤波时间常数（秒）
+
+    qint64 m_lastTs = -1;
+
+    bool m_calibrating = true;
+    int  m_calibTarget = 50;
+    QVector&lt;double&gt; m_calibX, m_calibY, m_calibZ;
+};
+
+#endif // GYROPARSER_H</code></pre>
+<p><strong><code>ICM20602/GyroParser.cpp</code></strong></p>
+<pre><code>#include "GyroParser.h"
+#include &lt;QRegularExpression&gt;
+#include &lt;QDebug&gt;
+#include &lt;QtMath&gt;
+
+static double wrap180(double a)
+{
+    while (a &gt; 180.0)
+        a -= 360.0;
+    while (a &lt; -180.0)
+        a += 360.0;
+    return a;
+}
+
+static double wrap360(double a)
+{
+    while (a &gt;= 360.0)
+        a -= 360.0;
+    while (a &lt; 0.0)
+        a += 360.0;
+    return a;
+}
+
+GyroParser::GyroParser(QObject *parent)
+    : QObject(parent)
+{
+}
+
+void GyroParser::processLine(const QString &amp;line)
+{
+    if (!line.contains(QStringLiteral("PHY")))
+        return;
+
+    static const QRegularExpression tsRe(QStringLiteral(R"(\(\s*(\d+)\s*\))"));
+
+    static const QRegularExpression axRe(QStringLiteral(R"(ax\s*=\s*([-+]?\d+(?:\.\d+)?))"));
+    static const QRegularExpression ayRe(QStringLiteral(R"(ay\s*=\s*([-+]?\d+(?:\.\d+)?))"));
+    static const QRegularExpression azRe(QStringLiteral(R"(az\s*=\s*([-+]?\d+(?:\.\d+)?))"));
+
+    static const QRegularExpression gxRe(QStringLiteral(R"(gx\s*=\s*([-+]?\d+(?:\.\d+)?))"));
+    static const QRegularExpression gyRe(QStringLiteral(R"(gy\s*=\s*([-+]?\d+(?:\.\d+)?))"));
+    static const QRegularExpression gzRe(QStringLiteral(R"(gz\s*=\s*([-+]?\d+(?:\.\d+)?))"));
+
+    const auto tsM = tsRe.match(line);
+    const auto axM = axRe.match(line);
+    const auto ayM = ayRe.match(line);
+    const auto azM = azRe.match(line);
+    const auto gxM = gxRe.match(line);
+    const auto gyM = gyRe.match(line);
+    const auto gzM = gzRe.match(line);
+
+    if (!tsM.hasMatch() || !axM.hasMatch() || !ayM.hasMatch() || !azM.hasMatch() ||
+        !gxM.hasMatch() || !gyM.hasMatch() || !gzM.hasMatch())
+        return;
+
+    const qint64 ts = tsM.captured(1).toLongLong();
+    const double ax = axM.captured(1).toDouble();
+    const double ay = ayM.captured(1).toDouble();
+    const double az = azM.captured(1).toDouble();
+    const double gx = gxM.captured(1).toDouble();
+    const double gy = gyM.captured(1).toDouble();
+    const double gz = gzM.captured(1).toDouble();
+
+    // 标定阶段
+    if (m_calibrating)
+    {
+        m_calibX.append(gx);
+        m_calibY.append(gy);
+        m_calibZ.append(gz);
+        if (m_calibZ.size() &gt;= m_calibTarget)
+            finishCalibration();
+        return;
+    }
+
+    if (m_lastTs &lt; 0)
+    {
+        m_lastTs = ts;
+        return;
+    }
+
+    double dt = (ts - m_lastTs) / 1000.0; // 毫秒 -&gt; 秒
+    m_lastTs = ts;
+    if (dt &lt;= 0.0 || dt &gt; 5.0)
+        return;
+
+    const double rollAcc = qRadiansToDegrees(qAtan2(ay, az));
+    const double pitchAcc = qRadiansToDegrees(qAtan2(-ax, qSqrt(ay * ay + az * az)));
+
+    double k = dt / (dt + m_tau);
+
+    const double mag = qSqrt(ax * ax + ay * ay + az * az);
+    if (mag &lt; 0.5 || mag &gt; 2.0)
+        k = 0.0;
+
+    // 横滚/俯仰
+    m_roll = (1.0 - k) * (m_roll + (gx - m_biasX) * dt) + k * rollAcc;
+    m_pitch = (1.0 - k) * (m_pitch + (gy - m_biasY) * dt) + k * pitchAcc;
+
+    // 偏航
+    m_yaw += (gz - m_biasZ) * dt;
+
+    m_roll = wrap180(m_roll);
+    m_pitch = wrap180(m_pitch);
+    m_yaw = wrap360(m_yaw);
+
+    emit attitudeChanged(m_roll, m_pitch, m_yaw);
+}
+
+void GyroParser::setGyroBias(double gxDps, double gyDps, double gzDps)
+{
+    m_biasX = gxDps;
+    m_biasY = gyDps;
+    m_biasZ = gzDps;
+    m_calibrating = false;
+    m_calibX.clear();
+    m_calibY.clear();
+    m_calibZ.clear();
+    m_roll = m_pitch = m_yaw = 0.0;
+    m_lastTs = -1;
+    emit calibrationDone(m_biasX, m_biasY, m_biasZ);
+}
+
+void GyroParser::startCalibration(int sampleCount)
+{
+    m_calibTarget = sampleCount &gt; 0 ? sampleCount : 50;
+    m_calibX.clear();
+    m_calibY.clear();
+    m_calibZ.clear();
+    m_calibrating = true;
+    m_roll = m_pitch = m_yaw = 0.0;
+    m_lastTs = -1;
+}
+
+void GyroParser::finishCalibration()
+{
+    if (m_calibX.isEmpty())
+        return;
+
+    auto avg = [](const QVector&lt;double&gt; &amp;v)
+    {
+        double sum = 0.0;
+        for (double x : v)
+            sum += x;
+        return sum / v.size();
+    };
+
+    m_biasX = avg(m_calibX);
+    m_biasY = avg(m_calibY);
+    m_biasZ = avg(m_calibZ);
+
+    m_calibX.clear();
+    m_calibY.clear();
+    m_calibZ.clear();
+    m_calibrating = false;
+    m_roll = m_pitch = m_yaw = 0.0;
+    m_lastTs = -1;
+
+    emit calibrationDone(m_biasX, m_biasY, m_biasZ);
+}
+
+void GyroParser::reset()
+{
+    m_roll = m_pitch = m_yaw = 0.0;
+    m_lastTs = -1;
+    m_calibX.clear();
+    m_calibY.clear();
+    m_calibZ.clear();
+    m_calibrating = true;
+}</code></pre>
+<p><strong><code>ICM20602/SerialPortManager.h</code></strong></p>
+<pre><code>﻿#ifndef SERIALPORTMANAGER_H
+#define SERIALPORTMANAGER_H
+
+#include &lt;QObject&gt;
+#include &lt;QSerialPort&gt;
+#include &lt;QSerialPortInfo&gt;
+#include &lt;QStringList&gt;
+
+class SerialPortManager : public QObject {
+	Q_OBJECT
+
+public:
+	explicit SerialPortManager(QObject* parent = nullptr);
+	~SerialPortManager();
+
+	bool openSerialPort(const QString&amp; portName, qint32 baudRate = QSerialPort::Baud9600);
+	void closeSerialPort();
+	void writeData(const QByteArray&amp; data);
+
+	QStringList getAvailablePorts() const; // 获取当前可用串口
+
+signals:
+	void dataReceived(const QByteArray&amp; data);
+private slots:
+	void handleReadyRead();
+
+private:
+	QSerialPort* serialPort;
+    QByteArray m_recvBuf;
+};
+
+#endif // SERIALPORTMANAGER_H</code></pre>
+<p><strong><code>ICM20602/SerialPortManager.cpp</code></strong></p>
+<pre><code>﻿#include "SerialPortManager.h"
+#include &lt;QDebug&gt;
+
+SerialPortManager::SerialPortManager(QObject* parent)
+	: QObject(parent), serialPort(new QSerialPort(this)) {
+	connect(serialPort, &amp;QSerialPort::readyRead, this, &amp;SerialPortManager::handleReadyRead);
+}
+
+SerialPortManager::~SerialPortManager() {
+	closeSerialPort();
+}
+
+bool SerialPortManager::openSerialPort(const QString&amp; portName, qint32 baudRate) {
+	serialPort-&gt;setPortName(portName);
+	serialPort-&gt;setBaudRate(baudRate);
+	serialPort-&gt;setDataBits(QSerialPort::Data8);
+	serialPort-&gt;setParity(QSerialPort::NoParity);
+	serialPort-&gt;setStopBits(QSerialPort::OneStop);
+	serialPort-&gt;setFlowControl(QSerialPort::NoFlowControl);
+
+	if (serialPort-&gt;open(QIODevice::ReadWrite)) {
+		qDebug() &lt;&lt; "Serial port opened successfully.";
+		return true;
+	}
+	else {
+		qDebug() &lt;&lt; "Failed to open serial port:" &lt;&lt; serialPort-&gt;errorString();
+		return false;
+	}
+}
+
+void SerialPortManager::closeSerialPort() {
+	if (serialPort-&gt;isOpen()) {
+		serialPort-&gt;close();
+		qDebug() &lt;&lt; "Serial port closed.";
+	}
+}
+
+void SerialPortManager::writeData(const QByteArray&amp; data) {
+	if (serialPort-&gt;isOpen()) {
+		serialPort-&gt;write(data);
+	}
+}
+
+QStringList SerialPortManager::getAvailablePorts() const {
+	QStringList portList;
+	foreach(const QSerialPortInfo &amp; info, QSerialPortInfo::availablePorts()) {
+		portList &lt;&lt; info.portName();
+	}
+	return portList;
+}
+
+void SerialPortManager::handleReadyRead() {
+    m_recvBuf.append(serialPort-&gt;readAll()); // 追加到缓冲区
+
+    // 循环查找换行符 \n，分割完整行
+    while(true)
+    {
+        int idx = m_recvBuf.indexOf('\n');
+        if(idx &lt; 0) break; // 没有完整一行，退出，等待下次数据
+
+        // 取出一行（包含 \r）
+        QByteArray line = m_recvBuf.left(idx+1);
+        m_recvBuf = m_recvBuf.mid(idx+1); // 缓冲区剩余数据保留
+
+        line = line.trimmed(); // 去掉 \r \n 回车换行
+        if(!line.isEmpty())
+        {
+            emit dataReceived(line); // 发出**完整一行**
+        }
+    }
+}</code></pre>
+<p><strong><code>ICM20602/widget.h</code></strong></p>
+<pre><code>#ifndef WIDGET_H
+#define WIDGET_H
+
+#include &lt;QWidget&gt;
+#include &lt;SerialPortManager.h&gt;
+#include "GyroParser.h"
+
+namespace Ui {
+class Widget;
+}
+
+class Widget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit Widget(QWidget *parent = nullptr);
+    ~Widget();
+
+private slots:
+    void on_pushButton_clicked();
+
+private:
+    Ui::Widget *ui;
+
+    SerialPortManager * s;
+    GyroParser * parser;
+};
+
+#endif // WIDGET_H</code></pre>
+<p><strong><code>ICM20602/widget.cpp</code></strong></p>
+<pre><code>#include "widget.h"
+#include "ui_widget.h"
+#include &lt;QDebug&gt;
+#include &lt;QByteArray&gt;
+
+Widget::Widget(QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::Widget)
+{
+    ui-&gt;setupUi(this);
+
+    s = new SerialPortManager;
+    s-&gt;openSerialPort("COM6", 115200);
+
+    parser = new GyroParser(this);
+    connect(parser, &amp;GyroParser::attitudeChanged, this, [this](double roll, double pitch, double yaw){
+        ui-&gt;label-&gt;setText(QStringLiteral("横滚: %1°  俯仰: %2°  偏航: %3°")
+                           .arg(roll, 0, 'f', 1)
+                           .arg(pitch, 0, 'f', 1)
+                           .arg(yaw, 0, 'f', 1));
+    });
+    connect(parser, &amp;GyroParser::calibrationDone, this, [](double gx, double gy, double gz){
+        qDebug() &lt;&lt; QStringLiteral("标定完成，零漂 gx=%1 gy=%2 gz=%3 dps")
+                    .arg(gx, 0, 'f', 2).arg(gy, 0, 'f', 2).arg(gz, 0, 'f', 2);
+    });
+
+    connect(s, &amp;SerialPortManager::dataReceived, this, [this](const QByteArray&amp; data){
+        const QString line = QString::fromUtf8(data);
+        qDebug() &lt;&lt; line;
+        parser-&gt;processLine(line);
+    });
+}
+
+Widget::~Widget()
+{
+    delete ui;
+}
+
+void Widget::on_pushButton_clicked()
+{
+    QString text = ui-&gt;lineEdit-&gt;text();
+    if (text.isEmpty())
+    {
+        qDebug() &lt;&lt; "输入为空";
+        return;
+    }
+
+    s-&gt;writeData(text.toUtf8());
+
+    ui-&gt;lineEdit-&gt;clear();
+}</code></pre>
+<p><strong><code>ICM20602/main.cpp</code></strong></p>
+<pre><code>#include "widget.h"
+
+#include &lt;QApplication&gt;
+
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    Widget w;
+    w.show();
+    return QApplication::exec();
+}</code></pre>
+<h4 id='实验现象-7'>实验现象</h4>
+<ul><li>未校准直接积分时，静止状态下偏航角持续缓慢漂移。</li><li>校准后漂移速度明显减小，但仍无法完全消除。</li><li>板子绕 Z 轴转动时偏航角随之增大或减小，停止转动后数值基本保持。</li></ul>
+<h4 id='思考题-7'>思考题</h4>
+<ol><li>零偏校准为什么要求传感器保持静止？</li></ol>
+<ol><li>积分漂移的根本原因是什么？</li></ol>
+<ol><li>除了零偏校准，还有哪些方法可以抑制漂移？</li></ol>
+<hr/>
+<h3 id='实验八-上位机解析光流数据计算相对位移'>实验八　上位机解析光流数据计算相对位移</h3>
+<h4 id='实验目的-8'>实验目的</h4>
+<ul><li>掌握光流增量数据的上报与解析方法。</li><li>理解光流位移与高度之间的关系。</li><li>实现水平方向相对位移的估算。</li></ul>
+<h4 id='实验原理-8'>实验原理</h4>
+<p>光流传感器输出的 dx / dy 为图像平面上的像素位移增量，与实际地面位移的关系为：</p>
+<pre><code>实际位移 ≈ 像素增量 × 高度 ÷ 焦距系数</code></pre>
+<p>即同一像素位移对应的实际位移随高度线性增大。因此在定高飞行时，光流可用于水平位置估计；单独使用光流无法得到绝对位置，需要与惯性测量或视觉数据融合。</p>
+<h4 id='参考代码-8'>参考代码</h4>
+<blockquote><p><code>ESP32/</code> 是开发板工程，<code>PMW3901/</code> 是上位机 Qt 工程。</p></blockquote>
+<p><strong><code>ESP32/main/main.c</code></strong></p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdint.h&gt;
+#include "esp_log.h"
+#include "esp_err.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/i2c_master.h"
+#include "PMW3901.h"
+#include "VL53L0X.h"
+static const char *TAG = "MAIN ";
+
+// I2C 引脚
+#define I2C_SDA_GPIO 41
+#define I2C_SCL_GPIO 42
+#define I2C_FREQ_HZ 400000
+
+#define SPI_SCLK_GPIO 7
+#define SPI_MOSI_GPIO 15
+#define SPI_MISO_GPIO 16
+#define PMW3901_CS_GPIO 6
+
+#define VL53L0X_ADDR 0x29
+
+void app_main(void)
+{
+    esp_err_t ret;
+    spi_bus_config_t spi_bus_cfg = {
+        .mosi_io_num = SPI_MOSI_GPIO,
+        .miso_io_num = SPI_MISO_GPIO,
+        .sclk_io_num = SPI_SCLK_GPIO,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+        .max_transfer_sz = 32,
+    };
+    ret = spi_bus_initialize(SPI2_HOST, &amp;spi_bus_cfg, SPI_DMA_DISABLED);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to initialize SPI bus: %s", esp_err_to_name(ret));
+    }
+    ESP_LOGI(TAG, "SPI bus OK (SCK=%d, MOSI=%d, MISO=%d)",
+             SPI_SCLK_GPIO, SPI_MOSI_GPIO, SPI_MISO_GPIO);
+
+    spi_device_interface_config_t pmw3901_dev_cfg = {
+        .mode = 3,
+        .clock_speed_hz = 2 * 1000 * 1000,
+        .spics_io_num = PMW3901_CS_GPIO,
+        .queue_size = 1,
+        .cs_ena_pretrans = 200,
+        .cs_ena_posttrans = 200,
+    };
+    spi_device_handle_t pmw3901_spi_dev = NULL;
+    ret = spi_bus_add_device(SPI2_HOST, &amp;pmw3901_dev_cfg, &amp;pmw3901_spi_dev);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to add SPI device: %s", esp_err_to_name(ret));
+    }
+    ESP_LOGI(TAG, "PMW3901 SPI device OK (CS=%d)", PMW3901_CS_GPIO);
+    ret = pmw3901_init(pmw3901_spi_dev);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to initialize PMW3901: %s", esp_err_to_name(ret));
+    }
+    ESP_LOGI(TAG, "PMW3901 OK");
+    bool pmw_ok = (ret == ESP_OK);
+    int16_t dx = 0, dy = 0;
+    uint8_t squal = 0;
+
+    i2c_master_bus_config_t i2c_bus_cfg = {
+        .clk_source = I2C_CLK_SRC_DEFAULT,
+        .i2c_port = I2C_NUM_0,
+        .scl_io_num = I2C_SCL_GPIO,
+        .sda_io_num = I2C_SDA_GPIO,
+        .glitch_ignore_cnt = 7,
+        .flags.enable_internal_pullup = true,
+    };
+    i2c_master_bus_handle_t i2c_bus_handle = NULL;
+    ret = i2c_new_master_bus(&amp;i2c_bus_cfg, &amp;i2c_bus_handle);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "I2C bus init failed: %s", esp_err_to_name(ret));
+        return;
+    }
+    ESP_LOGI(TAG, "I2C bus OK (SDA=%d, SCL=%d)", I2C_SDA_GPIO, I2C_SCL_GPIO);
+    i2c_device_config_t VL53L0X_dev_cfg =
+        {
+            .dev_addr_length = I2C_ADDR_BIT_7,
+            .device_address = VL53L0X_ADDR,
+            .scl_speed_hz = I2C_FREQ_HZ,
+        };
+    i2c_master_dev_handle_t vl53l0x_i2c_dev = NULL;
+    ret = i2c_master_bus_add_device(i2c_bus_handle, &amp;VL53L0X_dev_cfg, &amp;vl53l0x_i2c_dev);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "I2C device add failed: %s", esp_err_to_name(ret));
+        return;
+    }
+    ESP_LOGI(TAG, "I2C device OK (SDA=%d, SCL=%d)", I2C_SDA_GPIO, I2C_SCL_GPIO);
+
+    vl53l0x_config_t tof_config;
+    vl53l0x_init_default_config(&amp;tof_config);
+    tof_config.i2c_address = VL53L0X_ADDR;
+    tof_config.timeout_ms = 500;
+    tof_config.io_2v8 = true;
+    tof_config.interrupt_pin = 1;
+
+    vl53l0x_t tof_dev;
+    ret = vl53l0x_init(&amp;tof_dev, vl53l0x_i2c_dev, &amp;tof_config);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "VL53L0X init failed: %s", esp_err_to_name(ret));
+    }
+    else
+    {
+        vl53l0x_set_range_mode(&amp;tof_dev, 2);
+        ESP_LOGI(TAG, "VL53L0X OK (long-range)");
+    }
+
+    bool tof_ok = (ret == ESP_OK);
+    uint16_t dist = 0;
+    bool dist_ok = false;
+
+    while (1)
+    {
+        vTaskDelay(pdMS_TO_TICKS(100));
+        if (pmw_ok)
+        {
+            pmw3901_read_motion(&amp;dx, &amp;dy);
+            ESP_LOGI(TAG, "dx = %d, dy = %d\n", dx, dy);
+            pmw3901_read_squal(&amp;squal);
+            ESP_LOGI(TAG, "squal = %d\n", squal);
+        }
+        if (tof_ok)
+        {
+            dist = vl53l0x_read_range_single_mm(&amp;tof_dev);
+            dist_ok = !vl53l0x_timeout_occurred(&amp;tof_dev) &amp;&amp; dist &lt; 8000 &amp;&amp; dist &gt;= 30;
+        }
+        if (dist_ok &amp;&amp; tof_ok)
+        {
+            ESP_LOGI(TAG, "Distance: %d mm", dist);
+        }
+        else
+        {
+            ESP_LOGW(TAG, "Distance read failed");
+        }
+    }
+}</code></pre>
+<p><strong><code>ESP32/components/PMW3901/PMW3901.h</code></strong></p>
+<pre><code>// 用法:
+//   spi_device_handle_t spi_dev;
+//   spi_bus_add_device(SPI2_HOST, &amp;dev_cfg, &amp;spi_dev);  // 用户在 main.c 配置引脚
+//   pmw3901_init(spi_dev);
+
+#pragma once
+
+#include &lt;stdbool.h&gt;
+#include &lt;stdint.h&gt;
+#include "driver/spi_master.h"
+#include "esp_err.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @brief 初始化 PMW3901 光流传感器
+ * @param spi_dev  SPI 设备句柄 (用户预先创建, CS/模式/速率由用户配置)
+ * @return ESP_OK 成功
+ */
+esp_err_t pmw3901_init(spi_device_handle_t spi_dev);
+
+/**
+ * @brief 读取运动增量 (自动清除内部计数器)
+ *
+ * @param dx  X 方向位移
+ * @param dy  Y 方向位移
+ * @return ESP_OK 成功
+ */
+esp_err_t pmw3901_read_motion(int16_t *dx, int16_t *dy);
+
+/**
+ * @brief 读取图像质量 SQUAL (表面质量, 0~255, 越大说明表面纹理越丰富、成像越好)
+ *
+ * @param squal 输出图像质量值
+ * @return ESP_OK 成功
+ */
+esp_err_t pmw3901_read_squal(uint8_t *squal);
+
+/**
+ * @brief 开启/关闭 LED 照明
+ */
+esp_err_t pmw3901_set_led(bool led_on);
+
+/**
+ * @brief 使能帧缓冲区捕获模式
+ */
+esp_err_t pmw3901_enable_frame_buffer(void);
+
+/**
+ * @brief 读取一帧图像 (35x35 = 1225 像素灰度)
+ *
+ * 调用前需要先 pmw3901_enable_frame_buffer()
+ *
+ * @param buffer 至少 1225 字节
+ * @return ESP_OK 成功
+ */
+esp_err_t pmw3901_read_frame_buffer(uint8_t *buffer);
+
+#ifdef __cplusplus
+}
+#endif</code></pre>
+<p><strong><code>ESP32/components/PMW3901/PMW3901.c</code></strong></p>
+<pre><code>#include "PMW3901.h"
+#include &lt;string.h&gt;
+#include "esp_log.h"
+#include "esp_timer.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "rom/ets_sys.h"
+
+static const char *TAG = "PMW3901";
+
+#define FRAME_TIMEOUT_US 100000  // 帧捕获等待超时 100ms
+
+// 全局状态
+static spi_device_handle_t g_spi_dev = NULL;
+static bool g_initialized = false;
+
+// SPI 底层读写
+static esp_err_t register_write(uint8_t reg, uint8_t value)
+{
+    uint8_t tx[2] = {reg | 0x80u, value};
+    spi_transaction_t trans = {
+        .length = 16,
+        .tx_buffer = tx,
+    };
+    esp_err_t ret = spi_device_transmit(g_spi_dev, &amp;trans);
+    ets_delay_us(200); // 寄存器间最小间隔
+    return ret;
+}
+
+static uint8_t register_read(uint8_t reg)
+{
+    uint8_t tx[2] = {reg &amp; ~0x80u, 0x00};
+    uint8_t rx[2] = {0};
+    spi_transaction_t trans = {
+        .length = 16,
+        .rxlength = 16,
+        .tx_buffer = tx,
+        .rx_buffer = rx,
+    };
+    spi_device_transmit(g_spi_dev, &amp;trans);
+    ets_delay_us(200);
+    return rx[1];
+}
+
+// 性能优化寄存器初始化
+static void init_registers(void)
+{
+    register_write(0x7F, 0x00);
+    register_write(0x61, 0xAD);
+    register_write(0x7F, 0x03);
+    register_write(0x40, 0x00);
+    register_write(0x7F, 0x05);
+    register_write(0x41, 0xB3);
+    register_write(0x43, 0xF1);
+    register_write(0x45, 0x14);
+    register_write(0x5B, 0x32);
+    register_write(0x5F, 0x34);
+    register_write(0x7B, 0x08);
+    register_write(0x7F, 0x06);
+    register_write(0x44, 0x1B);
+    register_write(0x40, 0xBF);
+    register_write(0x4E, 0x3F);
+    register_write(0x7F, 0x08);
+    register_write(0x65, 0x20);
+    register_write(0x6A, 0x18);
+    register_write(0x7F, 0x09);
+    register_write(0x4F, 0xAF);
+    register_write(0x5F, 0x40);
+    register_write(0x48, 0x80);
+    register_write(0x49, 0x80);
+    register_write(0x57, 0x77);
+    register_write(0x60, 0x78);
+    register_write(0x61, 0x78);
+    register_write(0x62, 0x08);
+    register_write(0x63, 0x50);
+    register_write(0x7F, 0x0A);
+    register_write(0x45, 0x60);
+    register_write(0x7F, 0x00);
+    register_write(0x4D, 0x11);
+    register_write(0x55, 0x80);
+    register_write(0x74, 0x1F);
+    register_write(0x75, 0x1F);
+    register_write(0x4A, 0x78);
+    register_write(0x4B, 0x78);
+    register_write(0x44, 0x08);
+    register_write(0x45, 0x50);
+    register_write(0x64, 0xFF);
+    register_write(0x65, 0x1F);
+    register_write(0x7F, 0x14);
+    register_write(0x65, 0x60);
+    register_write(0x66, 0x08);
+    register_write(0x63, 0x78);
+    register_write(0x7F, 0x15);
+    register_write(0x48, 0x58);
+    register_write(0x7F, 0x07);
+    register_write(0x41, 0x0D);
+    register_write(0x43, 0x14);
+    register_write(0x4B, 0x0E);
+    register_write(0x45, 0x0F);
+    register_write(0x44, 0x42);
+    register_write(0x4C, 0x80);
+    register_write(0x7F, 0x10);
+    register_write(0x5B, 0x02);
+    register_write(0x7F, 0x07);
+    register_write(0x40, 0x41);
+    register_write(0x70, 0x00);
+
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    register_write(0x32, 0x44);
+    register_write(0x7F, 0x07);
+    register_write(0x40, 0x40);
+    register_write(0x7F, 0x06);
+    register_write(0x62, 0xF0);
+    register_write(0x63, 0x00);
+    register_write(0x7F, 0x0D);
+    register_write(0x48, 0xC0);
+    register_write(0x6F, 0xD5);
+    register_write(0x7F, 0x00);
+    register_write(0x5B, 0xA0);
+    register_write(0x4E, 0xA8);
+    register_write(0x5A, 0x50);
+    register_write(0x40, 0x80);
+}
+
+// 公开 API
+esp_err_t pmw3901_init(spi_device_handle_t spi_dev)
+{
+    if (g_initialized)
+        return ESP_OK;
+    if (!spi_dev)
+        return ESP_ERR_INVALID_ARG;
+
+    g_spi_dev = spi_dev;
+
+    // ---- SPI 总线复位时序 (原库: CS toggle) ----
+    {
+        uint8_t dummy = 0;
+        spi_transaction_t trans = {
+            .length = 8,
+            .tx_buffer = &amp;dummy,
+        };
+        spi_device_transmit(g_spi_dev, &amp;trans);
+        vTaskDelay(pdMS_TO_TICKS(2));
+    }
+
+    // ---- 上电复位 ----
+    esp_err_t ret = register_write(0x3A, 0x5A);
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Power-on reset write failed");
+        g_spi_dev = NULL;
+        return ret;
+    }
+    vTaskDelay(pdMS_TO_TICKS(5));
+
+    // ---- 芯片 ID 检查 ----
+    uint8_t chip_id = register_read(0x00);
+    uint8_t inv_id = register_read(0x5F);
+
+    ESP_LOGI(TAG, "Chip ID: 0x%02X (expect 0x49), Inverse: 0x%02X (~0x49=0xB6)",
+             chip_id, inv_id);
+
+    if (chip_id != 0x49 &amp;&amp; inv_id != 0xB8)
+    {
+        ESP_LOGE(TAG, "Chip ID mismatch! Check wiring.");
+        g_spi_dev = NULL;
+        return ESP_ERR_NOT_FOUND;
+    }
+
+    // ---- 预读 Motion 寄存器 (清空残留数据) ----
+    register_read(0x02);
+    register_read(0x03);
+    register_read(0x04);
+    register_read(0x05);
+    register_read(0x06);
+    vTaskDelay(pdMS_TO_TICKS(1));
+
+    // ---- 性能优化寄存器 ----
+    init_registers();
+
+    g_initialized = true;
+    ESP_LOGI(TAG, "PMW3901 init OK");
+    return ESP_OK;
+}
+
+esp_err_t pmw3901_read_motion(int16_t *dx, int16_t *dy)
+{
+    if (!g_initialized || !dx || !dy)
+        return ESP_ERR_INVALID_STATE;
+
+    // 读 0x02 触发 motion 寄存器锁存 + 清零
+    register_read(0x02);
+
+    // 读 Delta_X (0x03 low, 0x04 high)
+    uint8_t xh = register_read(0x04);
+    uint8_t xl = register_read(0x03);
+    *dx = (int16_t)(((uint16_t)xh &lt;&lt; 8) | xl);
+
+    // 读 Delta_Y (0x05 low, 0x06 high)
+    uint8_t yh = register_read(0x06);
+    uint8_t yl = register_read(0x05);
+    *dy = (int16_t)(((uint16_t)yh &lt;&lt; 8) | yl);
+
+    return ESP_OK;
+}
+
+esp_err_t pmw3901_read_squal(uint8_t *squal)
+{
+    if (!g_initialized || !squal)
+        return ESP_ERR_INVALID_STATE;
+
+    // 0x55 = Surface_Quality (SQUAL), 图像质量 0~255
+    *squal = register_read(0x07);
+    return ESP_OK;
+}
+
+esp_err_t pmw3901_set_led(bool led_on)
+{
+    if (!g_initialized)
+        return ESP_ERR_INVALID_STATE;
+
+    vTaskDelay(pdMS_TO_TICKS(200));
+    register_write(0x7F, 0x14);
+    register_write(0x6F, led_on ? 0x1C : 0x00);
+    register_write(0x7F, 0x00);
+
+    return ESP_OK;
+}
+
+esp_err_t pmw3901_enable_frame_buffer(void)
+{
+    if (!g_initialized)
+        return ESP_ERR_INVALID_STATE;
+
+    register_write(0x7F, 0x07);
+    register_write(0x41, 0x1D);
+    register_write(0x4C, 0x00);
+    register_write(0x7F, 0x08);
+    register_write(0x6A, 0x38);
+    register_write(0x7F, 0x00);
+    register_write(0x55, 0x04);
+    register_write(0x40, 0x80);
+    register_write(0x4D, 0x11);
+    register_write(0x70, 0x00);
+    register_write(0x58, 0xFF);
+
+    // 等待帧捕获就绪
+    int check;
+    do
+    {
+        check = register_read(0x58) &gt;&gt; 6;
+    } while (check == 0x03);
+
+    ets_delay_us(50);
+    return ESP_OK;
+}
+
+esp_err_t pmw3901_read_frame_buffer(uint8_t *buffer)
+{
+    if (!g_initialized || !buffer)
+        return ESP_ERR_INVALID_STATE;
+
+    int count = 0;
+    uint8_t mask = 0x0C;
+
+    for (int i = 0; i &lt; 1225; i++)
+    {
+        uint8_t a, hold;
+        // 等待有效数据
+        do
+        {
+            a = register_read(0x58);
+            hold = a &gt;&gt; 6;
+        } while (hold == 0x00 || hold == 0x03);
+
+        if (hold == 0x01)
+        {
+            uint8_t b = register_read(0x58);
+            uint8_t pixel = (uint8_t)(a &lt;&lt; 2) | (b &amp; mask);
+            buffer[count++] = pixel;
+        }
+    }
+
+    // 恢复并等待下一次就绪
+    register_write(0x70, 0x00);
+    register_write(0x58, 0xFF);
+
+    int check;
+    do
+    {
+        check = register_read(0x58) &gt;&gt; 6;
+    } while (check == 0x03);
+
+    return ESP_OK;
+}</code></pre>
+<p><strong><code>PMW3901/FlowParser.h</code></strong></p>
+<pre><code>#ifndef FLOWPARSER_H
+#define FLOWPARSER_H
+
+#include &lt;QObject&gt;
+#include &lt;QElapsedTimer&gt;
+
+class FlowParser : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit FlowParser(QObject *parent = nullptr);
+
+    void processLine(const QString &amp;line);
+
+    double xMm() const { return m_xMm; }
+    double yMm() const { return m_yMm; }
+
+    double heightMm() const { return m_heightMm; }
+    int squal() const { return m_squal; }
+
+    void setMinSqual(int s) { m_minSqual = s; }
+    int minSqual() const { return m_minSqual; }
+
+    void reset();
+
+signals:
+    void sampleReady(double xMm, double yMm, double heightMm,
+                     double vxMmS, double vyMmS, int squal);
+
+private:
+
+    static constexpr double kFlowScale = 1.0 / 385.0;
+
+    double m_xMm = 0.0;
+    double m_yMm = 0.0;
+    double m_heightMm = 0.0;
+    int    m_squal = 0;
+    int    m_minSqual = 10;
+
+
+    bool   m_hasPending = false;
+    double m_pendingDx = 0.0;
+    double m_pendingDy = 0.0;
+
+
+    QElapsedTimer m_timer;
+    bool          m_hasLastTs = false;
+    qint64        m_lastTsMs = 0;
+};
+
+#endif // FLOWPARSER_H</code></pre>
+<p><strong><code>PMW3901/FlowParser.cpp</code></strong></p>
+<pre><code>#include "FlowParser.h"
+#include &lt;QRegularExpression&gt;
+
+FlowParser::FlowParser(QObject *parent)
+    : QObject(parent)
+{
+    m_timer.start();
+}
+
+void FlowParser::processLine(const QString &amp;line)
+{
+    if (line.contains(QStringLiteral("squal")))
+    {
+        static const QRegularExpression squalRe(QStringLiteral(R"(squal\s*=\s*(\d+))"));
+        const auto m = squalRe.match(line);
+        if (!m.hasMatch())
+            return;
+        m_squal = m.captured(1).toInt();
+
+        double vx = 0.0, vy = 0.0;
+
+        if (m_hasPending)
+        {
+            if (m_squal &gt;= m_minSqual)
+            {
+                const double dmmX = m_pendingDx * m_heightMm * kFlowScale;
+                const double dmmY = m_pendingDy * m_heightMm * kFlowScale;
+
+                const qint64 nowMs = m_timer.elapsed();
+                if (m_hasLastTs)
+                {
+                    const double dtSec = (nowMs - m_lastTsMs) / 1000.0;
+                    if (dtSec &gt; 1e-3)
+                    {
+                        vx = dmmX / dtSec;
+                        vy = dmmY / dtSec;
+                    }
+                }
+                m_lastTsMs = nowMs;
+                m_hasLastTs = true;
+
+                m_xMm += dmmX;
+                m_yMm += dmmY;
+            }
+            m_hasPending = false;
+        }
+
+        emit sampleReady(m_xMm, m_yMm, m_heightMm, vx, vy, m_squal);
+        return;
+    }
+
+    if (line.contains(QStringLiteral("Distance"), Qt::CaseInsensitive))
+    {
+        static const QRegularExpression distRe(QStringLiteral(R"(Distance\s*:\s*([-+]?\d+(?:\.\d+)?))"),
+                                               QRegularExpression::CaseInsensitiveOption);
+        const auto m = distRe.match(line);
+        if (m.hasMatch())
+            m_heightMm = m.captured(1).toDouble();
+        return;
+    }
+
+    static const QRegularExpression dxRe(QStringLiteral(R"(dx\s*=\s*([-+]?\d+))"));
+    static const QRegularExpression dyRe(QStringLiteral(R"(dy\s*=\s*([-+]?\d+))"));
+    const auto dxM = dxRe.match(line);
+    const auto dyM = dyRe.match(line);
+    if (!dxM.hasMatch() || !dyM.hasMatch())
+        return;
+
+    m_pendingDx = dxM.captured(1).toDouble();
+    m_pendingDy = dyM.captured(1).toDouble();
+    m_hasPending = true;
+}
+
+void FlowParser::reset()
+{
+    m_xMm = m_yMm = 0.0;
+    m_hasPending = false;
+    m_pendingDx = m_pendingDy = 0.0;
+    m_hasLastTs = false;
+    emit sampleReady(m_xMm, m_yMm, m_heightMm, 0.0, 0.0, m_squal);
+}</code></pre>
+<p><strong><code>PMW3901/SerialPortManager.h</code></strong></p>
+<pre><code>﻿#ifndef SERIALPORTMANAGER_H
+#define SERIALPORTMANAGER_H
+
+#include &lt;QObject&gt;
+#include &lt;QSerialPort&gt;
+#include &lt;QSerialPortInfo&gt;
+#include &lt;QStringList&gt;
+
+class SerialPortManager : public QObject {
+	Q_OBJECT
+
+public:
+	explicit SerialPortManager(QObject* parent = nullptr);
+	~SerialPortManager();
+
+	bool openSerialPort(const QString&amp; portName, qint32 baudRate = QSerialPort::Baud9600);
+	void closeSerialPort();
+	void writeData(const QByteArray&amp; data);
+
+	QStringList getAvailablePorts() const; // 获取当前可用串口
+
+signals:
+	void dataReceived(const QByteArray&amp; data);
+private slots:
+	void handleReadyRead();
+
+private:
+	QSerialPort* serialPort;
+    QByteArray m_recvBuf;
+};
+
+#endif // SERIALPORTMANAGER_H</code></pre>
+<p><strong><code>PMW3901/SerialPortManager.cpp</code></strong></p>
+<pre><code>﻿#include "SerialPortManager.h"
+#include &lt;QDebug&gt;
+
+SerialPortManager::SerialPortManager(QObject* parent)
+	: QObject(parent), serialPort(new QSerialPort(this)) {
+	connect(serialPort, &amp;QSerialPort::readyRead, this, &amp;SerialPortManager::handleReadyRead);
+}
+
+SerialPortManager::~SerialPortManager() {
+	closeSerialPort();
+}
+
+bool SerialPortManager::openSerialPort(const QString&amp; portName, qint32 baudRate) {
+	serialPort-&gt;setPortName(portName);
+	serialPort-&gt;setBaudRate(baudRate);
+	serialPort-&gt;setDataBits(QSerialPort::Data8);
+	serialPort-&gt;setParity(QSerialPort::NoParity);
+	serialPort-&gt;setStopBits(QSerialPort::OneStop);
+	serialPort-&gt;setFlowControl(QSerialPort::NoFlowControl);
+
+	if (serialPort-&gt;open(QIODevice::ReadWrite)) {
+		qDebug() &lt;&lt; "Serial port opened successfully.";
+		return true;
+	}
+	else {
+		qDebug() &lt;&lt; "Failed to open serial port:" &lt;&lt; serialPort-&gt;errorString();
+		return false;
+	}
+}
+
+void SerialPortManager::closeSerialPort() {
+	if (serialPort-&gt;isOpen()) {
+		serialPort-&gt;close();
+		qDebug() &lt;&lt; "Serial port closed.";
+	}
+}
+
+void SerialPortManager::writeData(const QByteArray&amp; data) {
+	if (serialPort-&gt;isOpen()) {
+		serialPort-&gt;write(data);
+	}
+}
+
+QStringList SerialPortManager::getAvailablePorts() const {
+	QStringList portList;
+	foreach(const QSerialPortInfo &amp; info, QSerialPortInfo::availablePorts()) {
+		portList &lt;&lt; info.portName();
+	}
+	return portList;
+}
+
+void SerialPortManager::handleReadyRead() {
+    m_recvBuf.append(serialPort-&gt;readAll()); // 追加到缓冲区
+
+    // 循环查找换行符 \n，分割完整行
+    while(true)
+    {
+        int idx = m_recvBuf.indexOf('\n');
+        if(idx &lt; 0) break; // 没有完整一行，退出，等待下次数据
+
+        // 取出一行（包含 \r）
+        QByteArray line = m_recvBuf.left(idx+1);
+        m_recvBuf = m_recvBuf.mid(idx+1); // 缓冲区剩余数据保留
+
+        line = line.trimmed(); // 去掉 \r \n 回车换行
+        if(!line.isEmpty())
+        {
+            emit dataReceived(line); // 发出**完整一行**
+        }
+    }
+}</code></pre>
+<p><strong><code>PMW3901/widget.h</code></strong></p>
+<pre><code>#ifndef WIDGET_H
+#define WIDGET_H
+
+#include &lt;QWidget&gt;
+#include &lt;SerialPortManager.h&gt;
+#include "FlowParser.h"
+
+namespace Ui {
+class Widget;
+}
+
+class Widget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit Widget(QWidget *parent = nullptr);
+    ~Widget();
+
+private:
+    Ui::Widget *ui;
+
+    SerialPortManager * s;
+    FlowParser * parser;
+};
+
+#endif // WIDGET_H</code></pre>
+<p><strong><code>PMW3901/widget.cpp</code></strong></p>
+<pre><code>#include "widget.h"
+#include "ui_widget.h"
+#include &lt;QDebug&gt;
+#include &lt;QByteArray&gt;
+#include &lt;QPushButton&gt;
+
+Widget::Widget(QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::Widget)
+{
+    ui-&gt;setupUi(this);
+
+    s = new SerialPortManager;
+    s-&gt;openSerialPort("COM6", 115200);
+
+    parser = new FlowParser(this);
+    connect(parser, &amp;FlowParser::sampleReady, this,
+            [this](double xMm, double yMm, double heightMm,
+                   double vxMmS, double vyMmS, int squal){
+        ui-&gt;label-&gt;setText(QStringLiteral("相对位移  X: %1 mm   Y: %2 mm")
+                           .arg(xMm, 0, 'f', 1)
+                           .arg(yMm, 0, 'f', 1));
+        ui-&gt;labelHeight-&gt;setText(QStringLiteral("高度: %1 mm").arg(heightMm, 0, 'f', 0));
+        ui-&gt;labelVel-&gt;setText(QStringLiteral("速度  Vx: %1 mm/s   Vy: %2 mm/s   squal: %3")
+                              .arg(vxMmS, 0, 'f', 1)
+                              .arg(vyMmS, 0, 'f', 1)
+                              .arg(squal));
+    });
+
+    connect(ui-&gt;resetButton, &amp;QPushButton::clicked, this, [this](){
+        parser-&gt;reset();
+    });
+
+    connect(s, &amp;SerialPortManager::dataReceived, this, [this](const QByteArray&amp; data){
+        const QString line = QString::fromUtf8(data);
+        qDebug() &lt;&lt; line;
+        parser-&gt;processLine(line);
+    });
+}
+
+Widget::~Widget()
+{
+    delete ui;
+}</code></pre>
+<p><strong><code>PMW3901/main.cpp</code></strong></p>
+<pre><code>#include "widget.h"
+
+#include &lt;QApplication&gt;
+
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    Widget w;
+    w.show();
+    return QApplication::exec();
+}</code></pre>
+<h4 id='实验现象-8'>实验现象</h4>
+<ul><li>平台在桌面上沿一个方向平移时，对应轴的累计增量持续增大。</li><li>反向移动时累计值减小。</li><li>在不同高度下做相同位移，像素增量数值不同。</li></ul>
+<h4 id='思考题-8'>思考题</h4>
+<ol><li>光流为什么无法直接给出绝对位置？</li></ol>
+<ol><li>高度对像素增量与实际位移的换算有何影响？</li></ol>
+<ol><li>光流数据与惯性数据如何配合实现水平位置估计？</li></ol>
+<hr/>
+<hr/></article>
+</div>
+
+<div id="tipbar">
+  <b>编辑模式已打开。</b>直接点文字就能改、删、加。<br/>
+  改完请点上方 <b>「保存修改」</b>（存在这个浏览器里，下次打开还在），
+  或点 <b>「导出 HTML」</b> 下载成一个新文件，用它替换原来的文件即可。<br/>
+  想变回去就点 <b>「恢复原始」</b>。
+</div>
+<script>
+var DOC = document.getElementById('doc');
+var NAV = document.querySelector('nav');
+var BASENAME = decodeURIComponent(location.pathname.split('/').pop() || 'document').replace(/\.html?$/i, '') || 'document';
+var KEY = 'docedit::' + BASENAME;
+var DOC_SIG = '5f06e23e97cc';   /* 构建签名：文件一变，签名就变 */
+
+function flash(msg) {
+  var old = document.querySelector('.flash');
+  if (old) old.remove();
+  var d = document.createElement('div');
+  d.className = 'flash';
+  d.textContent = msg;
+  document.body.appendChild(d);
+  setTimeout(function () { d.remove(); }, 2600);
+}
+
+/* ---------- 编辑模式 ---------- */
+function toggleEdit() {
+  var on = document.body.classList.toggle('editing');
+  DOC.setAttribute('contenteditable', on ? 'true' : 'false');
+  document.getElementById('btnEdit').textContent = on ? '退出编辑' : '编辑内容';
+  document.getElementById('btnSave').hidden = !on;
+  document.getElementById('btnReset').hidden = !localStorage.getItem(KEY);
+  if (on) { flash('编辑模式已打开，改完记得保存或导出'); }
+}
+
+/* ---------- 保存到浏览器（只存浏览器，不改磁盘文件） ---------- */
+function saveLocal() {
+  try {
+    rebuildTOC();
+    var rec = { sig: DOC_SIG, time: new Date().toLocaleString(), html: DOC.innerHTML };
+    localStorage.setItem(KEY, JSON.stringify(rec));
+    showBanner('已保存到浏览器（' + rec.time + '）。<b>注意：这不会改动磁盘上的文件</b>，'
+      + '要发给别人或换电脑，请点「导出 HTML」下载文件。', 'info');
+  } catch (e) {
+    showBanner('这个浏览器不允许自动保存，请用「导出 HTML」把内容保存成文件。', 'warn');
+  }
+}
+
+function resetDoc() {
+  if (!confirm('确定丢弃浏览器里的修改，恢复成文件当前的内容吗？')) return;
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  location.reload();
+}
+
+/* ---------- 启动检查：不再自动覆盖文件内容 ---------- */
+function showBanner(html, kind) {
+  var el = document.getElementById('banner');
+  el.className = 'banner ' + (kind || 'info');
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+function hideBanner() {
+  document.getElementById('banner').style.display = 'none';
+}
+
+function loadSaved() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    var rec = JSON.parse(raw);
+    if (!rec || !rec.html) { localStorage.removeItem(KEY); return; }
+
+    if (rec.sig === DOC_SIG) {
+      showBanner('检测到你在浏览器里保存过的修改（' + rec.time + '）。'
+        + '<button class="primary" onclick="applySaved()">恢复修改</button>'
+        + '<button onclick="dropSaved()">丢弃</button>');
+    } else {
+      showBanner('<b>这个文件已经更新过了。</b>你浏览器里保存的修改是基于旧版本的（' + rec.time
+        + '），直接恢复会看不到新加的内容。'
+        + '<button class="primary" onclick="dropSaved()">丢弃旧修改（推荐）</button>'
+        + '<button onclick="applySaved()">仍要恢复旧修改</button>', 'warn');
+    }
+  } catch (e) {
+    try { localStorage.removeItem(KEY); } catch (e2) {}
+  }
+}
+
+function applySaved() {
+  try {
+    var rec = JSON.parse(localStorage.getItem(KEY));
+    if (rec && rec.html) { DOC.innerHTML = rec.html; rebuildTOC(); bindCopyButtons(); flash('已恢复浏览器里的修改'); }
+  } catch (e) {}
+  hideBanner();
+}
+
+function dropSaved() {
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  hideBanner();
+  flash('已丢弃浏览器副本，当前显示的是文件里的最新内容');
+}
+
+/* ---------- 重建左侧目录 ---------- */
+function rebuildTOC() {
+  if (!NAV) return;
+  var heads = DOC.querySelectorAll('h2, h3');
+  var html = '', cur = null, n = 0;
+  for (var i = 0; i < heads.length; i++) {
+    var h = heads[i];
+    n = n + 1;
+    if (!h.id) h.id = 'e' + n;
+    var txt = h.textContent.trim();
+    var safe = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (h.tagName === 'H2' || cur === null) {
+      if (cur) html += cur.kids.length ? '</details>' : '</a>';
+      cur = { id: h.id, kids: [] };
+      html += cur.kids ? '' : '';
+      html += (h.tagName === 'H2')
+        ? '<details open><summary>' + safe + '</summary>'
+        : '<a class="l2 solo" href="#' + h.id + '">' + safe + '</a>';
+    } else {
+      html += '<a class="l3" href="#' + h.id + '">' + safe + '</a>';
+      cur.kids.push(1);
+    }
+  }
+  if (cur && cur.kids.length) html += '</details>';
+  var head = NAV.querySelector('h3');
+  var tools = NAV.querySelector('.navtools');
+  NAV.innerHTML = '';
+  if (head) NAV.appendChild(head);
+  if (tools) NAV.appendChild(tools);
+  NAV.insertAdjacentHTML('beforeend', html);
+}
+
+/* ---------- 导出 HTML ---------- */
+function exportHTML() {
+  rebuildTOC();
+  var clone = document.documentElement.cloneNode(true);
+  var c = clone.querySelector('#doc');
+  c.innerHTML = DOC.innerHTML;
+  c.removeAttribute('contenteditable');
+  var cb = clone.querySelector('body');
+  if (cb) cb.className = '';
+  var tip = clone.querySelector('#tipbar');
+  if (tip) tip.remove();
+  var out = '<!DOCTYPE html>\n' + clone.outerHTML;
+  download(out, BASENAME + '.html', 'text/html');
+  flash('已导出 ' + BASENAME + '.html，用它替换原文件即可');
+}
+
+/* ---------- 导出 Markdown ---------- */
+function inlineMd(node) {
+  var s = '';
+  for (var i = 0; i < node.childNodes.length; i++) {
+    var c = node.childNodes[i];
+    if (c.nodeType === 3) { s += c.textContent; }
+    else if (c.tagName === 'STRONG' || c.tagName === 'B') { s += '**' + inlineMd(c) + '**'; }
+    else if (c.tagName === 'EM' || c.tagName === 'I') { s += '*' + inlineMd(c) + '*'; }
+    else if (c.tagName === 'CODE') { s += '`' + c.textContent + '`'; }
+    else if (c.tagName === 'BR') { s += '  \n'; }
+    else { s += inlineMd(c); }
+  }
+  return s.replace(/[ \t]*\n[ \t]*/g, ' ').replace(/ {2,}/g, ' ');
+}
+
+function blockMd(node, out) {
+  for (var i = 0; i < node.children.length; i++) {
+    var n = node.children[i], t = n.tagName;
+    if (t === 'H1' || t === 'H2' || t === 'H3' || t === 'H4') {
+      out.push(new Array(+t.charAt(1) + 1).join('#') + ' ' + inlineMd(n).trim(), '');
+    } else if (t === 'P') {
+      out.push(inlineMd(n).trim(), '');
+    } else if (t === 'UL' || t === 'OL') {
+      for (var j = 0; j < n.children.length; j++) out.push('- ' + inlineMd(n.children[j]).trim());
+      out.push('');
+    } else if (t === 'BLOCKQUOTE') {
+      out.push('> ' + inlineMd(n).trim(), '');
+    } else if (t === 'PRE') {
+      var code = n.querySelector('code');
+      out.push('```', (code ? code.textContent : n.textContent).replace(/\n+$/, ''), '```', '');
+    } else if (t === 'TABLE') {
+      var rows = n.querySelectorAll('tr');
+      for (var k = 0; k < rows.length; k++) {
+        var cells = [];
+        for (var m = 0; m < rows[k].children.length; m++) {
+          cells.push(inlineMd(rows[k].children[m]).trim().replace(/\|/g, '\\|'));
+        }
+        out.push('| ' + cells.join(' | ') + ' |');
+        if (k === 0) {
+          var sep = [];
+          for (var q = 0; q < cells.length; q++) sep.push('---');
+          out.push('| ' + sep.join(' | ') + ' |');
+        }
+      }
+      out.push('');
+    } else if (t === 'HR') {
+      out.push('---', '');
+    } else {
+      blockMd(n, out);
+    }
+  }
+}
+
+function exportMD() {
+  var out = [];
+  blockMd(DOC, out);
+  var text = out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  download(text, BASENAME + '.md', 'text/plain');
+  flash('已导出 ' + BASENAME + '.md');
+}
+
+/* ---------- 下载 ---------- */
+function download(text, filename, type) {
+  var blob = new Blob([text], { type: type + ';charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
+}
+
+/* ---------- 代码块一键复制 ---------- */
+function bindCopyButtons() {
+  var pres = document.querySelectorAll('#doc pre');
+  for (var i = 0; i < pres.length; i++) {
+    (function (pre) {
+      if (pre.querySelector('.copybtn')) return;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'copybtn noprint';
+      btn.textContent = '复制';
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        var code = pre.querySelector('code');
+        copyCode(code ? code.textContent : pre.textContent, btn);
+      });
+      pre.appendChild(btn);
+    })(pres[i]);
+  }
+}
+
+function copyCode(text, btn) {
+  function ok() {
+    btn.textContent = '已复制';
+    btn.classList.add('ok');
+    setTimeout(function () { btn.textContent = '复制'; btn.classList.remove('ok'); }, 1500);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.top = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    var done = false;
+    try { done = document.execCommand('copy'); } catch (err) { done = false; }
+    document.body.removeChild(ta);
+    if (done) { ok(); } else { btn.textContent = '请手动复制'; setTimeout(function () { btn.textContent = '复制'; }, 1500); }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(ok, fallback);
+  } else {
+    fallback();
+  }
+}
+
+loadSaved();
+bindCopyButtons();
+</script>
+</body>
+</html>

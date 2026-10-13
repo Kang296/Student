@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>嵌入式系统设计教案 · 附录</title>
+<style>
+  :root { --ink:#1f2330; --muted:#6b7280; --line:#e2e6f0; --accent:#1f6feb; --bg:#f7f8fc; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+         font-size:15px; line-height:1.85; }
+  header { position:sticky; top:0; z-index:30; background:rgba(255,255,255,.95); backdrop-filter:blur(8px);
+           border-bottom:1px solid var(--line); padding:12px 26px; display:flex; align-items:center; gap:14px; }
+  header b { font-size:16px; }
+  header small { color:var(--muted); font-size:12.5px; }
+  header .sp { margin-left:auto; display:flex; gap:8px; }
+  button { font:inherit; font-size:13px; border:1px solid var(--line); background:#fff; color:var(--ink);
+           border-radius:9px; padding:7px 13px; cursor:pointer; }
+  button:hover { background:#eef2ff; border-color:#c7d2fe; }
+  .wrap { display:flex; align-items:flex-start; gap:28px; max-width:1280px; margin:0 auto; padding:26px 26px 90px; }
+  nav { position:sticky; top:78px; flex:0 0 268px; max-height:calc(100vh - 110px); overflow:auto;
+        background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 12px;
+        box-shadow:0 1px 3px rgba(20,30,60,.05); }
+  nav h3 { margin:2px 6px 10px; font-size:12.5px; color:var(--muted); letter-spacing:1px; font-weight:600; }
+  nav a { display:block; text-decoration:none; color:#3c4356; font-size:13px; padding:5px 9px;
+          border-radius:8px; border-left:3px solid transparent; }
+  nav a:hover { background:#f1f4ff; color:var(--accent); }
+  nav a.l3 { padding-left:24px; font-size:12.5px; color:#5c6478; }
+  nav details { margin:2px 0; }
+  nav summary { cursor:pointer; font-size:13px; font-weight:600; padding:5px 8px; border-radius:8px;
+                color:#2a3145; list-style:none; }
+  nav summary::-webkit-details-marker { display:none; }
+  nav summary::before { content:"\25B8"; display:inline-block; width:14px; color:#9aa3b8;
+                        transition:.15s; }
+  nav details[open] > summary::before { transform:rotate(90deg); }
+  nav summary:hover { background:#f1f4ff; color:var(--accent); }
+  nav a.l2.solo { font-weight:600; }
+  .navtools { display:flex; gap:6px; margin:0 4px 10px; }
+  .navtools button { flex:1; padding:5px 8px; font-size:12px; }
+  article { flex:1 1 auto; min-width:0; background:#fff; border:1px solid var(--line); border-radius:16px;
+            padding:34px 40px 60px; box-shadow:0 2px 10px rgba(20,30,60,.05); }
+  article h1 { font-size:26px; margin:0 0 6px; padding-bottom:14px; border-bottom:3px solid var(--accent); }
+  article h2 { font-size:21px; margin:44px 0 14px; padding:8px 0 8px 14px; border-left:6px solid var(--accent);
+               background:linear-gradient(90deg,rgba(0,0,0,.035),transparent); border-radius:0 8px 8px 0; }
+  article h1, article h2, article h3 { scroll-margin-top:80px; }
+  article h3 { font-size:17px; margin:26px 0 10px; color:#2a3145; }
+  article p { margin:10px 0; }
+  article strong { color:#111827; }
+  article code { background:#f2f4fa; border:1px solid #e6e9f2; border-radius:5px; padding:1px 5px;
+                 font-family:"Cascadia Mono",Consolas,"Courier New",monospace; font-size:13px; color:#b5305f; }
+  pre { background:#22262f; color:#e6e9f2; border-radius:12px; padding:18px 20px; overflow:auto; line-height:1.6; }
+  pre code { background:none; border:none; color:inherit; padding:0; font-size:13px; }
+  blockquote { margin:16px 0; padding:12px 18px; background:#f4f7ff; border-left:5px solid var(--accent);
+               border-radius:0 10px 10px 0; color:#3d4763; }
+  blockquote p { margin:0; }
+  hr { border:none; border-top:1px dashed var(--line); margin:34px 0; }
+  ul { margin:10px 0; padding-left:0; list-style:none; }
+  li { position:relative; padding:4px 0 4px 20px; }
+  li::before { content:""; position:absolute; left:4px; top:14px; width:6px; height:6px; border-radius:50%;
+               background:var(--accent); opacity:.55; }
+  ol { margin:10px 0; padding-left:34px; }
+  ol li { list-style:decimal; padding:4px 0; }
+  ol li::before { content:none; }
+  .tw { overflow-x:auto; margin:16px 0; border-radius:12px; border:1px solid var(--line); }
+  table { border-collapse:collapse; width:100%; min-width:520px; font-size:14px; }
+  th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:9px 12px;
+           text-align:left; vertical-align:top; }
+  th { background:#f2f5fd; font-weight:600; white-space:nowrap; }
+  tr:last-child td { border-bottom:none; }
+  th:last-child, td:last-child { border-right:none; }
+  tbody tr:hover { background:#fafbff; }
+  #tipbar { display:none; margin:0 0 18px; padding:10px 14px; border-radius:10px; font-size:13px;
+            background:#fff8dc; border:1px solid #f0c419; color:#6b5300; }
+  body.editing #tipbar { display:block; }
+  body.editing #doc { outline:2px dashed #f0c419; outline-offset:16px; border-radius:8px; }
+  body.editing #doc :is(h1,h2,h3,h4):hover,
+  body.editing #doc :is(p,li,td,th):hover { background:#fffbe6; }
+  #doc[contenteditable="true"] { cursor:text; }
+  .banner { max-width:1280px; margin:16px auto -8px; padding:12px 18px; border-radius:12px;
+            font-size:13.5px; line-height:1.7; border:1px solid #d7ddea; background:#f3f6ff; color:#2a3145; }
+  .banner.warn { background:#fff8dc; border-color:#f0c419; color:#6b5300; }
+  .banner button { margin-left:8px; padding:5px 12px; font-size:12.5px; }
+  .banner button.primary { background:#1f6feb; border-color:#1f6feb; color:#fff; }
+  .pagenav { display:flex; gap:6px; flex-wrap:wrap; }
+  .pagenav a { font-size:12.5px; text-decoration:none; color:#3c4356; border:1px solid var(--line);
+               background:#fff; border-radius:9px; padding:6px 11px; }
+  .pagenav a:hover { background:#eef2ff; border-color:#c7d2fe; color:var(--accent); }
+  .pagenav a.cur { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .flash { position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:99;
+           background:#1f2330; color:#fff; padding:10px 18px; border-radius:10px; font-size:13px;
+           box-shadow:0 6px 20px rgba(0,0,0,.25); }
+  #doc a { color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(31,111,235,.35); }
+  #doc a:hover { border-bottom-color:var(--accent); }
+  nav a.l4 { padding-left:40px; font-size:11.5px; color:#6b7385; }
+  .fig { margin:18px 0; text-align:center; }
+  .fig img { max-width:100%; height:auto; border:1px solid var(--line); border-radius:10px;
+             background:#fff; }
+  .fig figcaption { margin-top:8px; font-size:13px; color:var(--muted); }
+  #doc pre { position:relative; }
+  .copybtn { position:absolute; top:8px; right:8px; z-index:5; padding:3px 10px; font-size:12px;
+             border-radius:7px; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.14);
+             color:#e6e9f2; cursor:pointer; opacity:0; transition:.15s; user-select:none;
+             font-family:inherit; line-height:1.4; }
+  #doc pre:hover .copybtn { opacity:1; }
+  .copybtn:hover { background:rgba(255,255,255,.28); }
+  .copybtn.ok { background:#2e7d32; border-color:#2e7d32; color:#fff; opacity:1; }
+  @media (max-width:900px) { .copybtn { opacity:1; } }
+  @media (max-width:900px) {
+    .wrap { flex-direction:column; padding:16px; }
+    nav { position:static; flex:none; width:100%; max-height:none; }
+    article { padding:22px 18px 40px; }
+  }
+  @media print {
+    body { background:#fff; font-size:11.5pt; }
+    header, nav, .noprint { display:none !important; }
+    .wrap { display:block; max-width:none; padding:0; }
+    article { border:none; box-shadow:none; border-radius:0; padding:0; }
+    article h1 { font-size:20pt; }
+    article h2 { font-size:15pt; margin-top:0; page-break-before:always; page-break-after:avoid; }
+    article h1 + blockquote + hr + h2, article h2:first-of-type { page-break-before:avoid; }
+    article h3 { font-size:12.5pt; page-break-after:avoid; }
+    table, pre, blockquote, li { page-break-inside:avoid; }
+    th { background:#eee; }
+    pre { background:#f4f4f6; color:#111; border:1px solid #ccc; }
+    @page { margin:14mm 12mm; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <b>嵌入式系统设计教案 · 附录</b><small>引脚表 · 故障排查 · API 速查 · 元器件速查 · 基本功清单 · 现象对照 ｜ 共 7 册</small>
+<div class="pagenav"><a href="00-索引.html">索引</a><a href="01-课程与基础准备.html">01 基础</a><a href="02-外设与通信.html">02 外设</a><a href="03-无线与系统.html">03 无线</a><a href="04-小车开发板实验.html">04 小车</a><a href="05-无人机开发板实验.html">05 无人机</a><a href="06-综合项目与迁移.html">06 综合</a><a href="07-附录.html" class="cur">07 附录</a></div>
+  <span class="sp">
+    <button id="btnEdit" onclick="toggleEdit()">编辑内容</button>
+    <button id="btnSave" onclick="saveLocal()" hidden>保存修改</button>
+    <button id="btnHtml" onclick="exportHTML()">导出 HTML</button>
+    <button id="btnMd" onclick="exportMD()">导出 Markdown</button>
+    <button id="btnReset" onclick="resetDoc()" hidden>恢复原始</button>
+    <button onclick="window.print()">打印 / PDF</button>
+  </span>
+</header>
+<div id="banner" class="banner" style="display:none"></div>
+<div class="wrap">
+  <nav>
+    <h3>目 录</h3>
+    <div class="navtools noprint">
+      <button onclick="document.querySelectorAll('nav details').forEach(d=>d.open=true)">全部展开</button>
+      <button onclick="document.querySelectorAll('nav details').forEach(d=>d.open=false)">全部折叠</button>
+    </div>
+    <details open><summary>附录 A 实验引脚对照表</summary><a class='l3' href='#智能小车开发板'>智能小车开发板</a><a class='l3' href='#无人机开发板'>无人机开发板</a></details>
+<a class='l2 solo' href='#附录-b-常见故障排查'>附录 B 常见故障排查</a>
+<a class='l2 solo' href='#附录-c-常用官方-api-速查'>附录 C 常用官方 API 速查</a>
+<a class='l2 solo' href='#附录-d-元器件符号与封装速查'>附录 D 元器件符号与封装速查</a>
+<a class='l2 solo' href='#附录-e-基本功训练清单'>附录 E 基本功训练清单</a>
+<a class='l2 solo' href='#附录-f-运行现象速查'>附录 F 运行现象速查</a>
+  </nav>
+  <article id="doc"><h1>嵌入式系统设计教案 · 附录</h1>
+<blockquote><p><strong>教学平台</strong>：ESP32-S3 核心板 · ESP32 智能小车开发板 · ESP32-S3 无人机开发板<br/><strong>软件框架</strong>：ESP-IDF（乐鑫官方框架）<br/><strong>代码说明</strong>：第 1~3、6 册的教学示例只使用 Espressif 官方组件（<code>driver</code> / <code>esp_wifi</code> / <code>esp_ble</code> / <code>esp_http_server</code> / <code>esp_camera</code> / <code>freertos</code>）；第 4、5 册的实验代码取自配套开发板工程，其中包含课程自研组件（<code>icm20602</code>、<code>PMW3901</code>、<code>spl06001</code>、<code>VL53L0X</code> 等）以及电脑端 Qt 上位机程序。</p></blockquote>
+<hr/>
+<h2 id='附录-a-实验引脚对照表'>附录 A　实验引脚对照表</h2>
+<h3 id='智能小车开发板'>智能小车开发板</h3>
+<div class='tw'><table><thead><tr><th>功能</th><th>引脚</th><th>说明</th></tr></thead><tbody><tr><td>LED 蓝 / 绿 / 红</td><td>GPIO2 / GPIO42 / GPIO41</td><td>高电平点亮</td></tr><tr><td>光敏传感器</td><td>ADC1_CH0</td><td>模拟量输入</td></tr><tr><td>DHT11 数据</td><td>GPIO42</td><td>需 4.7kΩ 上拉</td></tr><tr><td>L298N IN1 / IN2</td><td>GPIO47 / GPIO21</td><td>A 通道转向控制</td></tr><tr><td>L298N IN3 / IN4</td><td>GPIO20 / GPIO19</td><td>B 通道转向控制</td></tr><tr><td>电机 PWM</td><td>ENA / ENB 引脚</td><td>LEDC 输出</td></tr><tr><td>摄像头 XCLK / SIOD / SIOC</td><td>GPIO15 / GPIO4 / GPIO5</td><td>摄像头配置</td></tr><tr><td>摄像头 D7~D0</td><td>GPIO16 / 17 / 18 / 12 / 10 / 8 / 9 / 11</td><td>图像数据</td></tr><tr><td>摄像头 VSYNC / HREF / PCLK</td><td>GPIO6 / GPIO7 / GPIO13</td><td>同步与时钟</td></tr></tbody></table></div>
+<h3 id='无人机开发板'>无人机开发板</h3>
+<div class='tw'><table><thead><tr><th>功能</th><th>引脚</th><th>说明</th></tr></thead><tbody><tr><td>ICM20602 SDA / SCL</td><td>GPIO41 / GPIO42</td><td>惯性传感器 I2C</td></tr><tr><td>VL53L0X SDA / SCL</td><td>GPIO41 / GPIO42</td><td>激光测距 I2C</td></tr><tr><td>PMW3901 SCLK / MOSI / MISO / NCS</td><td>GPIO7 / GPIO15 / GPIO16 / GPIO6</td><td>光流 SPI</td></tr><tr><td>SPL06-001 SCK / SDA / SDO / CSB</td><td>GPIO7 / GPIO15 / GPIO16 / GPIO8</td><td>气压计 SPI</td></tr><tr><td>摄像头 XCLK / SIOD / SIOC</td><td>GPIO15 / GPIO4 / GPIO5</td><td>摄像头配置</td></tr><tr><td>摄像头 VSYNC / HREF / PCLK</td><td>GPIO6 / GPIO7 / GPIO13</td><td>同步与时钟</td></tr></tbody></table></div>
+<hr/>
+<h2 id='附录-b-常见故障排查'>附录 B　常见故障排查</h2>
+<div class='tw'><table><thead><tr><th>现象</th><th>可能原因</th><th>排查方法</th></tr></thead><tbody><tr><td>编译通过但板子无反应</td><td>引脚号错误、未配置方向</td><td>用万用表测量目标引脚电平</td></tr><tr><td>串口打印乱码</td><td>波特率不一致、时钟源配置错误</td><td>核对监视器波特率与 <code>uart_config_t</code> 设置</td></tr><tr><td>板子反复重启</td><td>任务中缺少阻塞点导致看门狗超时</td><td>检查循环内是否有 <code>vTaskDelay</code></td></tr><tr><td>中断服务函数里崩溃重启</td><td>中断中调用了阻塞接口，或函数未加 <code>IRAM_ATTR</code></td><td>中断只做标记，耗时处理交给任务</td></tr><tr><td>中断完全没反应</td><td>忘了 <code>gpio_install_isr_service()</code>，或触发方式填成 <code>GPIO_INTR_DISABLE</code></td><td>检查中断安装与 <code>intr_type</code> 配置</td></tr><tr><td>I2C 扫描不到设备</td><td>上拉电阻缺失、地址错误、未共地</td><td>先用扫描程序逐地址探测</td></tr><tr><td>I2C 读回全 0 / 全 F</td><td>器件未初始化、模式配置错误</td><td>读取身份寄存器验证通信</td></tr><tr><td>SPI 读回异常</td><td>时钟极性相位错误、片选未生效</td><td>用逻辑分析仪核对时序</td></tr><tr><td>ADC 读数剧烈跳动</td><td>输入悬空、未滤波、接地不良</td><td>输入并联电容并增加软件滤波</td></tr><tr><td>PWM 无输出</td><td>未调用 <code>ledc_update_duty</code> 或使能函数</td><td>检查 <code>ledc_channel_config</code> 返回值</td></tr><tr><td>电机不转</td><td>驱动电源未接、使能引脚无 PWM</td><td>测量 ENA / ENB 是否有波形</td></tr><tr><td>WiFi 连不上</td><td>频段不符、密码错误、信号弱</td><td>确认使用 2.4GHz 网络</td></tr><tr><td>摄像头取帧失败</td><td>帧缓冲未归还、分辨率过高</td><td>检查是否成对调用获取与归还</td></tr><tr><td>光流数据不更新</td><td>表面无纹理、光照不足、镜头脏污</td><td>更换有纹理的测试平面</td></tr><tr><td>气压高度漂移</td><td>气流扰动、温度变化</td><td>增加滤波并设置基准值</td></tr><tr><td>姿态角持续漂移</td><td>未做零偏校准、积分离散误差</td><td>执行静止校准并检查 <code>dt</code> 计算</td></tr></tbody></table></div>
+<hr/>
+<h2 id='附录-c-常用官方-api-速查'>附录 C　常用官方 API 速查</h2>
+<div class='tw'><table><thead><tr><th>功能</th><th>接口</th><th>头文件</th></tr></thead><tbody><tr><td>配置引脚方向</td><td><code>gpio_set_direction()</code></td><td><code>driver/gpio.h</code></td></tr><tr><td>输出 / 读取电平</td><td><code>gpio_set_level()</code> / <code>gpio_get_level()</code></td><td><code>driver/gpio.h</code></td></tr><tr><td>安装 GPIO 中断服务</td><td><code>gpio_install_isr_service()</code></td><td><code>driver/gpio.h</code></td></tr><tr><td>挂载 / 卸载中断处理函数</td><td><code>gpio_isr_handler_add()</code> / <code>gpio_isr_handler_remove()</code></td><td><code>driver/gpio.h</code></td></tr><tr><td>创建定时器</td><td><code>gptimer_new_timer()</code> / <code>gptimer_start()</code></td><td><code>driver/gptimer.h</code></td></tr><tr><td>配置 PWM</td><td><code>ledc_timer_config()</code> / <code>ledc_channel_config()</code></td><td><code>driver/ledc.h</code></td></tr><tr><td>修改占空比</td><td><code>ledc_set_duty()</code> / <code>ledc_update_duty()</code></td><td><code>driver/ledc.h</code></td></tr><tr><td>配置 ADC</td><td><code>adc_oneshot_new_unit()</code> / <code>adc_oneshot_config_channel()</code></td><td><code>driver/adc_oneshot.h</code></td></tr><tr><td>读取 ADC</td><td><code>adc_oneshot_read()</code></td><td><code>driver/adc_oneshot.h</code></td></tr><tr><td>配置串口</td><td><code>uart_param_config()</code> / <code>uart_set_pin()</code> / <code>uart_driver_install()</code></td><td><code>driver/uart.h</code></td></tr><tr><td>串口收发</td><td><code>uart_write_bytes()</code> / <code>uart_read_bytes()</code></td><td><code>driver/uart.h</code></td></tr><tr><td>创建 I2C 总线</td><td><code>i2c_new_master_bus()</code></td><td><code>driver/i2c_master.h</code></td></tr><tr><td>挂载 I2C 设备</td><td><code>i2c_master_bus_add_device()</code></td><td><code>driver/i2c_master.h</code></td></tr><tr><td>I2C 读写</td><td><code>i2c_master_transmit()</code> / <code>i2c_master_transmit_receive()</code></td><td><code>driver/i2c_master.h</code></td></tr><tr><td>初始化 SPI</td><td><code>spi_bus_initialize()</code> / <code>spi_bus_add_device()</code></td><td><code>driver/spi_master.h</code></td></tr><tr><td>SPI 传输</td><td><code>spi_device_transmit()</code></td><td><code>driver/spi_master.h</code></td></tr><tr><td>初始化 WiFi</td><td><code>esp_wifi_init()</code> / <code>esp_wifi_set_config()</code> / <code>esp_wifi_start()</code></td><td><code>esp_wifi.h</code></td></tr><tr><td>初始化网络栈</td><td><code>esp_netif_init()</code> / <code>esp_event_loop_create_default()</code></td><td><code>esp_netif.h</code> / <code>esp_event.h</code></td></tr><tr><td>启动 HTTP 服务</td><td><code>httpd_start()</code> / <code>httpd_register_uri_handler()</code></td><td><code>esp_http_server.h</code></td></tr><tr><td>MQTT 客户端</td><td><code>esp_mqtt_client_init()</code> / <code>esp_mqtt_client_start()</code></td><td><code>mqtt_client.h</code></td></tr><tr><td>BLE 初始化（NimBLE）</td><td><code>nimble_port_init()</code> / <code>nimble_port_freertos_init()</code></td><td><code>nimble/nimble_port.h</code></td></tr><tr><td>创建任务</td><td><code>xTaskCreate()</code></td><td><code>freertos/task.h</code></td></tr><tr><td>任务延时</td><td><code>vTaskDelay()</code> / <code>pdMS_TO_TICKS()</code></td><td><code>freertos/task.h</code></td></tr><tr><td>队列操作</td><td><code>xQueueCreate()</code> / <code>xQueueSend()</code> / <code>xQueueReceive()</code></td><td><code>freertos/queue.h</code></td></tr><tr><td>互斥锁</td><td><code>xSemaphoreCreateMutex()</code> / <code>xSemaphoreTake()</code> / <code>xSemaphoreGive()</code></td><td><code>freertos/semphr.h</code></td></tr><tr><td>事件组</td><td><code>xEventGroupCreate()</code> / <code>xEventGroupWaitBits()</code></td><td><code>freertos/event_groups.h</code></td></tr><tr><td>微秒延时</td><td><code>esp_rom_delay_us()</code></td><td><code>esp_rom_sys.h</code></td></tr><tr><td>微秒计时</td><td><code>esp_timer_get_time()</code></td><td><code>esp_timer.h</code></td></tr><tr><td>NVS 读写</td><td><code>nvs_open()</code> / <code>nvs_set_str()</code> / <code>nvs_get_str()</code> / <code>nvs_commit()</code></td><td><code>nvs.h</code></td></tr><tr><td>复位任务看门狗</td><td><code>esp_task_wdt_reset()</code></td><td><code>esp_task_wdt.h</code></td></tr><tr><td>摄像头采集</td><td><code>esp_camera_init()</code> / <code>esp_camera_fb_get()</code> / <code>esp_camera_fb_return()</code></td><td><code>esp_camera.h</code></td></tr></tbody></table></div>
+<hr/>
+<h2 id='附录-d-元器件符号与封装速查'>附录 D　元器件符号与封装速查</h2>
+<div class='tw'><table><thead><tr><th>元器件</th><th>电路符号特征</th><th>常见封装</th><th>引脚识别</th></tr></thead><tbody><tr><td>电阻</td><td>矩形方块或波浪线</td><td>0805 / 0603 / 直插</td><td>无极性</td></tr><tr><td>电容（陶瓷）</td><td>两条平行短线</td><td>0805 / 0603</td><td>无极性</td></tr><tr><td>电容（电解）</td><td>一条直线 + 一条弧线</td><td>直插圆柱 / 贴片钽电容</td><td>长脚为正，壳体标"−"为负</td></tr><tr><td>二极管</td><td>三角形 + 竖线</td><td>1N4148 / 1N4007 / SS34</td><td>色环一端为阴极</td></tr><tr><td>发光二极管</td><td>二极管符号 + 两个箭头</td><td>0805 / 直插</td><td>长脚为正</td></tr><tr><td>三极管（NPN）</td><td>三脚，箭头朝外</td><td>S8050 / S9013</td><td>平面对自己，从左到右 E-B-C</td></tr><tr><td>三极管（PNP）</td><td>三脚，箭头朝内</td><td>S8550 / S9012</td><td>平面对自己，从左到右 E-B-C</td></tr><tr><td>MOS 管（N 沟道）</td><td>三脚 + 体二极管</td><td>AO3400 / SI2302</td><td>逻辑电平型需 <code>Vgs(th) &lt; 2V</code></td></tr><tr><td>电感</td><td>螺旋线或方块标注 L</td><td>直插 / 贴片</td><td>无极性</td></tr><tr><td>晶振</td><td>两条竖线夹一个方块</td><td>HC-49 / 3225</td><td>无极性</td></tr></tbody></table></div>
+<p><strong>常用取值速查</strong>：</p>
+<div class='tw'><table><thead><tr><th>场合</th><th>典型取值</th></tr></thead><tbody><tr><td>LED 限流电阻（3.3V 供电）</td><td>150Ω ~ 1kΩ</td></tr><tr><td>三极管基极电阻</td><td>1kΩ ~ 10kΩ</td></tr><tr><td>I2C 上拉电阻</td><td>4.7kΩ</td></tr><tr><td>单总线上拉电阻</td><td>4.7kΩ ~ 10kΩ</td></tr><tr><td>按键上拉电阻</td><td>10kΩ</td></tr><tr><td>电源去耦电容</td><td>0.1μF</td></tr><tr><td>电源储能电容</td><td>10μF ~ 100μF</td></tr><tr><td>复位电路电容</td><td>100nF</td></tr></tbody></table></div>
+<hr/>
+<h2 id='附录-e-基本功训练清单'>附录 E　基本功训练清单</h2>
+<p>本课程以"基本功达标"为教学主线，项目与实验是训练载体。下表列出各项基本功及其训练场合与验收方式。</p>
+<div class='tw'><table><thead><tr><th>序号</th><th>基本功</th><th>训练场合</th><th>验收方式</th></tr></thead><tbody><tr><td>1</td><td>识读原理图：找出电源、信号、地</td><td>6.4 节 + 每块开发板的原理图</td><td>现场指认任一模块的供电与信号走向</td></tr><tr><td>2</td><td>用万用表测量电压、通断与电平</td><td>6.2 节 + 每次接线后</td><td>独立判断供电是否正常、线是否接反</td></tr><tr><td>3</td><td>计算限流电阻、分压电阻与基极电阻</td><td>6.3 节 + LED / 三极管驱动实验</td><td>手算并在实物上验证电流</td></tr><tr><td>4</td><td>使用逻辑分析仪抓取总线时序</td><td>7.4 ~ 7.7 节</td><td>抓一帧 I2C / SPI / UART 波形并对照手册解析</td></tr><tr><td>5</td><td>阅读数据手册：找到量程、寄存器、时序参数</td><td>各传感器实验</td><td>从手册中查出指定寄存器的地址与含义</td></tr><tr><td>6</td><td>使用日志与回溯定位故障</td><td>6.2 节</td><td>根据 Backtrace 定位到具体代码行</td></tr><tr><td>7</td><td>按"供电 → 总线 → 驱动 → 数据 → 系统"顺序排故</td><td>全部实验</td><td>面对故障现象能给出有序排查步骤</td></tr><tr><td>8</td><td>手写外设初始化流程（不看例程）</td><td>7.1 ~ 7.7 节</td><td>现场默写 GPIO / UART / I2C 的初始化步骤</td></tr><tr><td>9</td><td>设计一个自定义通信帧格式</td><td>7.4 节</td><td>写出帧结构并说明校验方式</td></tr><tr><td>10</td><td>分析任务划分与共享资源保护</td><td>8.4 节</td><td>画出任务交互图并说明加锁位置</td></tr><tr><td>11</td><td>计算定时器分频与 PWM 参数</td><td>7.2 节 + 13.5 节</td><td>给定频率与分辨率算出 PSC / ARR / CCR</td></tr><tr><td>12</td><td>区分并正确使用两套优先级规则</td><td>8.4 节 + 13.7 节</td><td>口述 NVIC 与 FreeRTOS 优先级的差异</td></tr></tbody></table></div>
+<p><strong>基本功达标要求</strong>：第 1 ~ 7 项必须全部通过，第 8 ~ 12 项至少通过三项，方可参加综合项目答辩。</p>
+<hr/>
+<h2 id='附录-f-运行现象速查'>附录 F　运行现象速查</h2>
+<div class='tw'><table><thead><tr><th>位置</th><th>示例</th><th>运行后的现象</th></tr></thead><tbody><tr><td>6.1</td><td>程序入口</td><td>串口打印 <code>system started</code></td></tr><tr><td>6.2</td><td>LED 调试标记</td><td>板载 LED 每隔约 2.6 秒快闪 3 次</td></tr><tr><td>7.1</td><td>按键输入</td><td>按下按键时指示灯亮，松开熄灭</td></tr><tr><td>7.1</td><td>引脚复用与恢复</td><td>复位后引脚恢复为普通 GPIO，LED 正常闪烁</td></tr><tr><td>7.1</td><td>引脚掩码</td><td>两个引脚上的 LED 同步闪烁</td></tr><tr><td>7.1</td><td>位运算三件套</td><td>串口打印置位、取位、清零的结果</td></tr><tr><td>7.2</td><td>LEDC 硬件 PWM</td><td>LED 渐亮渐暗，形成呼吸效果</td></tr><tr><td>7.8</td><td>OLED</td><td>屏幕上显示一个方框图案</td></tr><tr><td>7.9</td><td>蜂鸣器</td><td>每 3 秒响三声</td></tr><tr><td>7.9</td><td>舵机</td><td>舵机在 0° → 90° → 180° 之间来回转动</td></tr><tr><td>8.1</td><td>HTTP 服务器</td><td>浏览器访问设备 IP 能看到网页</td></tr><tr><td>8.3</td><td>MQTT</td><td>串口打印连接状态，每 5 秒上报一次数据</td></tr><tr><td>8.4</td><td>队列</td><td>串口打印任务之间传递的数值</td></tr><tr><td>8.4</td><td>互斥锁</td><td>两个任务交替访问共享变量并打印</td></tr><tr><td>8.4</td><td>事件组</td><td>两个条件都满足后打印提示</td></tr><tr><td>8.5</td><td>NVS</td><td>串口打印写入后读回的账号与密码</td></tr></tbody></table></div>
+<blockquote><p>GPIO 输出、定时器、ADC、UART、DHT11、I2C、SPI、WiFi、蓝牙、摄像头这些外设的完整代码与实验现象，见 <a href="04-小车开发板实验.html#实验一-led-灯点亮实验">第 4 册 · 小车实验一（LED 灯点亮实验）</a>、<a href="05-无人机开发板实验.html#实验二-icm20602-惯性数据采集实验">第 5 册 · 无人机实验二（ICM20602 惯性数据采集实验）</a> 等对应实验。</p></blockquote></article>
+</div>
+
+<div id="tipbar">
+  <b>编辑模式已打开。</b>直接点文字就能改、删、加。<br/>
+  改完请点上方 <b>「保存修改」</b>（存在这个浏览器里，下次打开还在），
+  或点 <b>「导出 HTML」</b> 下载成一个新文件，用它替换原来的文件即可。<br/>
+  想变回去就点 <b>「恢复原始」</b>。
+</div>
+<script>
+var DOC = document.getElementById('doc');
+var NAV = document.querySelector('nav');
+var BASENAME = decodeURIComponent(location.pathname.split('/').pop() || 'document').replace(/\.html?$/i, '') || 'document';
+var KEY = 'docedit::' + BASENAME;
+var DOC_SIG = '786e2ec4a51b';   /* 构建签名：文件一变，签名就变 */
+
+function flash(msg) {
+  var old = document.querySelector('.flash');
+  if (old) old.remove();
+  var d = document.createElement('div');
+  d.className = 'flash';
+  d.textContent = msg;
+  document.body.appendChild(d);
+  setTimeout(function () { d.remove(); }, 2600);
+}
+
+/* ---------- 编辑模式 ---------- */
+function toggleEdit() {
+  var on = document.body.classList.toggle('editing');
+  DOC.setAttribute('contenteditable', on ? 'true' : 'false');
+  document.getElementById('btnEdit').textContent = on ? '退出编辑' : '编辑内容';
+  document.getElementById('btnSave').hidden = !on;
+  document.getElementById('btnReset').hidden = !localStorage.getItem(KEY);
+  if (on) { flash('编辑模式已打开，改完记得保存或导出'); }
+}
+
+/* ---------- 保存到浏览器（只存浏览器，不改磁盘文件） ---------- */
+function saveLocal() {
+  try {
+    rebuildTOC();
+    var rec = { sig: DOC_SIG, time: new Date().toLocaleString(), html: DOC.innerHTML };
+    localStorage.setItem(KEY, JSON.stringify(rec));
+    showBanner('已保存到浏览器（' + rec.time + '）。<b>注意：这不会改动磁盘上的文件</b>，'
+      + '要发给别人或换电脑，请点「导出 HTML」下载文件。', 'info');
+  } catch (e) {
+    showBanner('这个浏览器不允许自动保存，请用「导出 HTML」把内容保存成文件。', 'warn');
+  }
+}
+
+function resetDoc() {
+  if (!confirm('确定丢弃浏览器里的修改，恢复成文件当前的内容吗？')) return;
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  location.reload();
+}
+
+/* ---------- 启动检查：不再自动覆盖文件内容 ---------- */
+function showBanner(html, kind) {
+  var el = document.getElementById('banner');
+  el.className = 'banner ' + (kind || 'info');
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+function hideBanner() {
+  document.getElementById('banner').style.display = 'none';
+}
+
+function loadSaved() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (!raw) return;
+    var rec = JSON.parse(raw);
+    if (!rec || !rec.html) { localStorage.removeItem(KEY); return; }
+
+    if (rec.sig === DOC_SIG) {
+      showBanner('检测到你在浏览器里保存过的修改（' + rec.time + '）。'
+        + '<button class="primary" onclick="applySaved()">恢复修改</button>'
+        + '<button onclick="dropSaved()">丢弃</button>');
+    } else {
+      showBanner('<b>这个文件已经更新过了。</b>你浏览器里保存的修改是基于旧版本的（' + rec.time
+        + '），直接恢复会看不到新加的内容。'
+        + '<button class="primary" onclick="dropSaved()">丢弃旧修改（推荐）</button>'
+        + '<button onclick="applySaved()">仍要恢复旧修改</button>', 'warn');
+    }
+  } catch (e) {
+    try { localStorage.removeItem(KEY); } catch (e2) {}
+  }
+}
+
+function applySaved() {
+  try {
+    var rec = JSON.parse(localStorage.getItem(KEY));
+    if (rec && rec.html) { DOC.innerHTML = rec.html; rebuildTOC(); bindCopyButtons(); flash('已恢复浏览器里的修改'); }
+  } catch (e) {}
+  hideBanner();
+}
+
+function dropSaved() {
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  hideBanner();
+  flash('已丢弃浏览器副本，当前显示的是文件里的最新内容');
+}
+
+/* ---------- 重建左侧目录 ---------- */
+function rebuildTOC() {
+  if (!NAV) return;
+  var heads = DOC.querySelectorAll('h2, h3');
+  var html = '', cur = null, n = 0;
+  for (var i = 0; i < heads.length; i++) {
+    var h = heads[i];
+    n = n + 1;
+    if (!h.id) h.id = 'e' + n;
+    var txt = h.textContent.trim();
+    var safe = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (h.tagName === 'H2' || cur === null) {
+      if (cur) html += cur.kids.length ? '</details>' : '</a>';
+      cur = { id: h.id, kids: [] };
+      html += cur.kids ? '' : '';
+      html += (h.tagName === 'H2')
+        ? '<details open><summary>' + safe + '</summary>'
+        : '<a class="l2 solo" href="#' + h.id + '">' + safe + '</a>';
+    } else {
+      html += '<a class="l3" href="#' + h.id + '">' + safe + '</a>';
+      cur.kids.push(1);
+    }
+  }
+  if (cur && cur.kids.length) html += '</details>';
+  var head = NAV.querySelector('h3');
+  var tools = NAV.querySelector('.navtools');
+  NAV.innerHTML = '';
+  if (head) NAV.appendChild(head);
+  if (tools) NAV.appendChild(tools);
+  NAV.insertAdjacentHTML('beforeend', html);
+}
+
+/* ---------- 导出 HTML ---------- */
+function exportHTML() {
+  rebuildTOC();
+  var clone = document.documentElement.cloneNode(true);
+  var c = clone.querySelector('#doc');
+  c.innerHTML = DOC.innerHTML;
+  c.removeAttribute('contenteditable');
+  var cb = clone.querySelector('body');
+  if (cb) cb.className = '';
+  var tip = clone.querySelector('#tipbar');
+  if (tip) tip.remove();
+  var out = '<!DOCTYPE html>\n' + clone.outerHTML;
+  download(out, BASENAME + '.html', 'text/html');
+  flash('已导出 ' + BASENAME + '.html，用它替换原文件即可');
+}
+
+/* ---------- 导出 Markdown ---------- */
+function inlineMd(node) {
+  var s = '';
+  for (var i = 0; i < node.childNodes.length; i++) {
+    var c = node.childNodes[i];
+    if (c.nodeType === 3) { s += c.textContent; }
+    else if (c.tagName === 'STRONG' || c.tagName === 'B') { s += '**' + inlineMd(c) + '**'; }
+    else if (c.tagName === 'EM' || c.tagName === 'I') { s += '*' + inlineMd(c) + '*'; }
+    else if (c.tagName === 'CODE') { s += '`' + c.textContent + '`'; }
+    else if (c.tagName === 'BR') { s += '  \n'; }
+    else { s += inlineMd(c); }
+  }
+  return s.replace(/[ \t]*\n[ \t]*/g, ' ').replace(/ {2,}/g, ' ');
+}
+
+function blockMd(node, out) {
+  for (var i = 0; i < node.children.length; i++) {
+    var n = node.children[i], t = n.tagName;
+    if (t === 'H1' || t === 'H2' || t === 'H3' || t === 'H4') {
+      out.push(new Array(+t.charAt(1) + 1).join('#') + ' ' + inlineMd(n).trim(), '');
+    } else if (t === 'P') {
+      out.push(inlineMd(n).trim(), '');
+    } else if (t === 'UL' || t === 'OL') {
+      for (var j = 0; j < n.children.length; j++) out.push('- ' + inlineMd(n.children[j]).trim());
+      out.push('');
+    } else if (t === 'BLOCKQUOTE') {
+      out.push('> ' + inlineMd(n).trim(), '');
+    } else if (t === 'PRE') {
+      var code = n.querySelector('code');
+      out.push('```', (code ? code.textContent : n.textContent).replace(/\n+$/, ''), '```', '');
+    } else if (t === 'TABLE') {
+      var rows = n.querySelectorAll('tr');
+      for (var k = 0; k < rows.length; k++) {
+        var cells = [];
+        for (var m = 0; m < rows[k].children.length; m++) {
+          cells.push(inlineMd(rows[k].children[m]).trim().replace(/\|/g, '\\|'));
+        }
+        out.push('| ' + cells.join(' | ') + ' |');
+        if (k === 0) {
+          var sep = [];
+          for (var q = 0; q < cells.length; q++) sep.push('---');
+          out.push('| ' + sep.join(' | ') + ' |');
+        }
+      }
+      out.push('');
+    } else if (t === 'HR') {
+      out.push('---', '');
+    } else {
+      blockMd(n, out);
+    }
+  }
+}
+
+function exportMD() {
+  var out = [];
+  blockMd(DOC, out);
+  var text = out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+  download(text, BASENAME + '.md', 'text/plain');
+  flash('已导出 ' + BASENAME + '.md');
+}
+
+/* ---------- 下载 ---------- */
+function download(text, filename, type) {
+  var blob = new Blob([text], { type: type + ';charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
+}
+
+/* ---------- 代码块一键复制 ---------- */
+function bindCopyButtons() {
+  var pres = document.querySelectorAll('#doc pre');
+  for (var i = 0; i < pres.length; i++) {
+    (function (pre) {
+      if (pre.querySelector('.copybtn')) return;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'copybtn noprint';
+      btn.textContent = '复制';
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        var code = pre.querySelector('code');
+        copyCode(code ? code.textContent : pre.textContent, btn);
+      });
+      pre.appendChild(btn);
+    })(pres[i]);
+  }
+}
+
+function copyCode(text, btn) {
+  function ok() {
+    btn.textContent = '已复制';
+    btn.classList.add('ok');
+    setTimeout(function () { btn.textContent = '复制'; btn.classList.remove('ok'); }, 1500);
+  }
+  function fallback() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.top = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    var done = false;
+    try { done = document.execCommand('copy'); } catch (err) { done = false; }
+    document.body.removeChild(ta);
+    if (done) { ok(); } else { btn.textContent = '请手动复制'; setTimeout(function () { btn.textContent = '复制'; }, 1500); }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(ok, fallback);
+  } else {
+    fallback();
+  }
+}
+
+loadSaved();
+bindCopyButtons();
+</script>
+</body>
+</html>
